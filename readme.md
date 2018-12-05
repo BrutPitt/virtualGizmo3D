@@ -3,6 +3,8 @@
 You can also define a way to rotate the model around any single axis.
 It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like Shift/Ctrl/Alt/Super
 
+
+
 **virtualGizmo3D** internally uses quaternions to rotate the model, but You can also only pass your model matrix and gat back a transormation matrix with rotation, translazion and scale, inside.
 
 **virtualGizmo3D** is an *header only* tool. 

@@ -152,3 +152,9 @@ typedef virtualGizmo3DClass<float> vfGizmo3DClass;
 typedef virtualGizmoClass<double>   vdGizmoClass;
 typedef virtualGizmo3DClass<double> vdGizmo3DClass;
 ```
+### Build Example
+The example shown in the screenshot is provided.
+To build it you can use CMake (3.10 or higher) or the Visual Studio solution project (for VS 2017) in Windows.
+You need to have installed [**GLFW**](https://www.glfw.org/) and [**glm**](https://github.com/g-truc/glm) in your compiler search path (LIB/INCLUDE)
+The CMake file is able to build also an [**EMSCRIPTEN**](https://kripken.github.io/emscripten-site/index.html) version, obviously you need to have installed EMSCRIPTEN SDK on your computer (1.38.10 or higher): look at or use the helper batch/script files, in main example folder, to pass appropriate defines/patameters to CMake command line.
+To build the EMSCRIPTEN version, in Windows, with CMake, need to have **mingw32-make.exe** in your computer and search PATH (only the make utility is enough): it is a condition of EMSDK tool to build with CMake.

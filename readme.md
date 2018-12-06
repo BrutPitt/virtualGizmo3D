@@ -105,7 +105,8 @@ void onRender() //or when you prefer
 You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from following link:
 - [virtualGizmo3D WebGL2](https://www.michelemorrone.eu/emsExamples/oglGizmo.html)
 
-It works only on browsers with WebGl 2 support (FireFox/Chrome/Opera)
+It works only on browsers with WebGl 2 support (FireFox/Chrome/Opera).
+
 Test if your browser supports WebGL 2, here: [WebGL2 Report](http://webglreport.com/?v=2)
 
 

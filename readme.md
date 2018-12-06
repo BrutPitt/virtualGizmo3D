@@ -106,7 +106,7 @@ You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from follow
 - [virtualGizmo3D WebGL2](https://www.michelemorrone.eu/emsExamples/oglGizmo.html)
 
 It works only on browsers with WebGl 2 support (FireFox/Chrome/Opera)
-Test here if your browser support WebGL 2: [WebGL 2 Report](http://webglreport.com/?v=2)
+Test if your browser supports WebGL 2, here: [WebGL2 Report](http://webglreport.com/?v=2)
 
 
 ### Other useful stuff

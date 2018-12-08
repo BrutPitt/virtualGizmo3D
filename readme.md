@@ -1,5 +1,5 @@
 # virtualGizmo3D
-**virtualGizmo3D** is an 3D GIZMO manipulator: it provides a way to rotate, move and scale a model, with mouse.
+**virtualGizmo3D** is an 3D GIZMO manipulator: it provides a way to rotate, move and scale a model, with mouse; a virtual trackball with dolly and pan features
 You can also define a way to rotate the model around any single axis.
 It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like Shift/Ctrl/Alt/Super
 
@@ -10,6 +10,15 @@ It use mouse movement on screen, mouse buttons and (eventually) key modifiers, l
 **virtualGizmo3D** is an *header only* tool. 
 It uses the [**glm** mathematics library](https://github.com/g-truc/glm) (0.9.9 or higher), also it an *header only* tool.
 
+### Live WebGL2 example
+You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from following link:
+- [virtualGizmo3D WebGL2](https://www.michelemorrone.eu/emsExamples/oglGizmo.html)
+
+It works only on browsers with **WebGl 2** and *webassembly* support (FireFox/Opera/Chrome and Chromium based).
+
+Test if your browser supports WebGL 2, here: [WebGL2 Report](http://webglreport.com/?v=2)
+
+### How to use virtualGizmo3D in your code
 
 To use **virtualGizmo3D** need to include `virtualGizmo.h` file in your code and declare an object of type vfGizmo3DClass, global or as member of your class 
 
@@ -101,15 +110,6 @@ void onRender() //or when you prefer
 ```
 
  
-### Live WebGL2 example
-You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from following link:
-- [virtualGizmo3D WebGL2](https://www.michelemorrone.eu/emsExamples/oglGizmo.html)
-
-It works only on browsers with **WebGl 2** and *webassembly* support (FireFox/Opera/Chrome and Chromium based).
-
-Test if your browser supports WebGL 2, here: [WebGL2 Report](http://webglreport.com/?v=2)
-
-
 ### Other useful stuff
 
 If you need to more feeling with the mouse use:

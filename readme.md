@@ -105,7 +105,9 @@ void onRender() //or when you prefer
     // virtualGizmo transformations
     getGizmo().applyTransform(model);           // apply transform to matrix model
 
-    //Now you can build MV and MVP matrix
+    // Now the matrix 'model' has inside all the transformations:
+    // rotation, pan and dolly translations, 
+    // and you can build MV and MVP matrix
 }
 ```
 
@@ -163,3 +165,8 @@ You need to have installed [**GLFW**](https://www.glfw.org/) and [**glm**](https
 The CMake file is able to build also an [**EMSCRIPTEN**](https://kripken.github.io/emscripten-site/index.html) version, obviously you need to have installed EMSCRIPTEN SDK on your computer (1.38.10 or higher): look at or use the helper batch/script files, in main example folder, to pass appropriate defines/patameters to CMake command line.
 
 To build the EMSCRIPTEN version, in Windows, with CMake, need to have **mingw32-make.exe** in your computer and search PATH (only the make utility is enough): it is a condition of EMSDK tool to build with CMake.
+
+**For windows users that use vs2017 project solution:**
+The current VisualStudio project solution refers to my environment variable RAMDISK (`R:`), and subsequent VS intrinsic variables to generate binary output:
+`$(RAMDISK)\$(MSBuildProjectDirectoryNoRoot)\$(DefaultPlatformToolset)\$(Platform)\$(Configuration)\` 
+Even without a RAMDISK variable, executable and binary files are outputted in base to the values of these VS variables, starting from root of current drive.

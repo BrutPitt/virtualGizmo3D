@@ -57,17 +57,15 @@ const float ambientInt   = 0.3;
 const float specularInt  = 0.5; // vec4(1.0, 1.0, 1.0, 1.0);\n"
 const float shininessExp = 10.f;
 vec3 light_position = vec3(10.0f, 10.0f, 5.0f);
+const float near = .001;
+const float far = 10.0;
 
-/*
-float near = 0.1; 
-float far  = 30.0; 
-  
+
 float LinearizeDepth(float depth) 
 {
-    float z = depth * 2.0 - 1.0; // back to NDC 
-    return (2.0 * near * far) / (far + near - z * (far - near));	
+    float z = -depth * 2.0 - (far - near);                          // back to NDC -depth/(far - near) * 2.0 - 1.0
+    return (2.0 * near * far) / ((far + near) - z * (far - near));	
 }
-*/
 
 void main()
 {
@@ -78,26 +76,10 @@ void main()
     float specular = pow(max(0.0, dot(vsNormal, halfVec)), shininessExp);
     //gl_FragDepth = .z;
     
-    // draw in [-1, 1] -> get depth in [0, 1], with 1 farther
-    float depth = (1.f-vsPos.z)*.5;
+    // draw in zNDC [-1, 1] 
+    float depth = LinearizeDepth(vsPos.z);
 
-    vec3 distAttenuation = vec3(depth*depth *.25);
-/*
-#ifdef GL_ES 
-    vec4 distAttenuation = vec4(vec3(depth*depth *.25),0.5);
-#else
-    vec4 distAttenuation = vec4(vec3(depth*depth *.25),1.0);
-#endif
-*/
-    
-    color = vec4(vsColor.rgb * ambientInt + vsColor.rgb * diffuse + vec3(specular * specularInt) - distAttenuation, 1.0);
+    color = vsColor * ambientInt + vsColor * diffuse + vec4(specular * specularInt) /*- distAtten*/;
 
-    //color = vec4(vec3(depth/2.0+.5), 1.0);
-
-
-    gl_FragDepth = depth; //gl_FragCoord.z / gl_FragCoord.w;
-    //color = vec4(vec3(depth), 1.0);
-    //color = distAtten;
- //color = fs.color; 
-
+    gl_FragDepth = depth; 
 } 

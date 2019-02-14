@@ -42,7 +42,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-
 typedef int vgButtons;
 typedef int vgModifiers;
 
@@ -136,6 +135,12 @@ public:
     void motion( T x, T y) {
         delta.x = x - pos.x;   delta.y = pos.y - y;
         pos.x = x;   pos.y = y;
+        update();
+    }
+    //    Call on Pinching
+    ////////////////////////////////////////////////////////////////////////////
+    void pinching( T d ) {
+        delta.y = d;
         update();
     }
 
@@ -445,22 +450,26 @@ public:
         panControlButton = b;
         panControlModifiers = m;
     }
+    int getPanControlButton() { return panControlButton; }
+    int getPanControlModifier() { return panControlModifiers; }
 
     //  Set the speed for the dolly operation.
     //////////////////////////////////////////////////////////////////
     void setDollyScale( T scale) { dollyScale = scale;  }
+    T getDollyScale() { return dollyScale;  }
     //  Set the speed for pan
     //////////////////////////////////////////////////////////////////
     void setPanScale( T scale) { panScale = scale; }
+    T getPanScale() { return panScale; }
 
     //  Set the Dolly to a specified distance.
     //////////////////////////////////////////////////////////////////
     void setDollyPosition(T pos)             { dolly.z = pos; }
-    void setDollyPosition(glm::tvec3<T> pos) { dolly.z = pos.z; }
+    void setDollyPosition(const glm::tvec3<T> &pos) { dolly.z = pos.z; }
 
     //  Set the Dolly to a specified distance.
     //////////////////////////////////////////////////////////////////
-    void setPanPosition(glm::tvec3<T> pos) { pan.x = pos.x; pan.y = pos.y;}
+    void setPanPosition(const glm::tvec3<T> &pos) { pan.x = pos.x; pan.y = pos.y;}
 
     //  Get dolly pos... use as Zoom factor
     //////////////////////////////////////////////////////////////////

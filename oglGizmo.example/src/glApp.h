@@ -35,10 +35,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-
-//#include "glUtilities.h"
-
-// For compilers that support precompilation, includes "wx/wx.h".
 #include <string>
 #include <sstream>
 #include <vector>
@@ -65,23 +61,13 @@ enum ScreeShotReq {
 };
 
 
-/**
- * An glApp class encapsulating the windowing system.
- *
- * \author Don Olmstead
- * \version 1.0
- */
-
 class glWindow;
 
 void setGUIStyle();
 
-
-
 /////////////////////////////////////////////////
 // theApp -> Main App -> container
 /////////////////////////////////////////////////
-
 
 class mainGLApp
 {

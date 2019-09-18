@@ -1,14 +1,14 @@
 # virtualGizmo3D
-**virtualGizmo3D** is an 3D GIZMO manipulator: it provides a way to rotate, move and scale a model, with mouse; a virtual trackball with dolly and pan features
+**virtualGizmo3D** is an 3D GIZMO manipulator: like a trackball it provides a way to rotate, move and scale a model, with mouse, also with dolly and pan features
 You can also define a way to rotate the model around any single axis.
-It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like Shift/Ctrl/Alt/Super
+It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like *Shift/Ctrl/Alt/Super*, that you define
 
 ![alt text](https://raw.githubusercontent.com/BrutPitt/virtualGizmo3D/master/screenshots/oglGizmo.gif)
 
 **virtualGizmo3D** internally uses quaternions to rotate the model, but You can also only pass your model matrix and gat back a transormation matrix with rotation, translazion and scale, inside.
 
 **virtualGizmo3D** is an *header only* tool. 
-It uses the [**glm** mathematics library](https://github.com/g-truc/glm) (0.9.9 or higher), also it an *header only* tool.
+It does not depend on any framework or graphic engine: uses the simply [**glm** mathematics library](https://github.com/g-truc/glm) (0.9.9 or higher), also it an *header only* tool.
 
 ### Live WebGL2 example
 You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from following link:
@@ -30,8 +30,9 @@ vfGizmo3DClass gizmo;
 vfGizmo3DClass &getGizmo() { return gizmo; }  //optional helper
 ```
 
-In your 3D engine initalization declare (overriding default ones) your preferred controls
-In this example I use GLFW, but it is simple to change it if you use SDL, other tools, or native OS access.
+In your 3D engine *initalization* declare (overriding default ones) your preferred controls:
+
+**GLFW buttons/keys initialization**
 
 ```cpp
 void onInit()
@@ -43,42 +44,65 @@ void onInit()
     //For main manipulator/rotation
     getGizmo().setGizmoRotControl( (vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) 0 /* evNoModifier */ );
 
-    //for pan and zoom/dolly
+    //for pan and zoom/dolly... you can use also wheel to zoom
     getGizmo().setDollyControl((vgButtons) GLFW_MOUSE_BUTTON_RIGHT, (vgModifiers) GLFW_MOD_CONTROL|GLFW_MOD_SHIFT);
     getGizmo().setPanControl(  (vgButtons) GLFW_MOUSE_BUTTON_RIGHT, (vgModifiers) 0);
     
-    //If you need, for rotations around a single axis
+    //If you need, for rotations around a single axis with key modifiers
     getGizmo().setGizmoRotXControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_SHIFT);
     getGizmo().setGizmoRotYControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_CONTROL);
     getGizmo().setGizmoRotZControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_ALT | GLFW_MOD_SUPER);
 
-
     // Now call viewportSize with the dimension of window/screen
     // It is need to set mouse sensitivity for rotation
     // You need to call it also in your "reshape" function: when resize the window (look below)
-
     getGizmo().viewportSize(GetWidth(), GetHeight());
 
 }    
 ```
+**SDL buttons/keys Initialization**
 
-In your Mouse_Button_Callback function call:
+```cpp
+void onInit()
+{
+    //You can freely define any button or key modifier you prefer
+
+    //For main manipulator/rotation
+    getGizmo().setGizmoRotControl( (vgButtons) SDL_BUTTON_LEFT, (vgModifiers) 0 /* evNoModifier */ );
+
+    //for pan and zoom/dolly... you can use also wheel to zoom
+    getGizmo().setDollyControl((vgButtons) SDL_BUTTON_RIGHT, (vgModifiers) 0);
+    getGizmo().setPanControl(  (vgButtons) SDL_BUTTON_RIGHT, (vgModifiers) KMOD_CTRL|KMOD_SHIFT);
+
+    //If you need, for rotations around a single axis with key modifiers
+    getGizmo().setGizmoRotXControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_SHIFT);
+    getGizmo().setGizmoRotYControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_CTRL);
+    getGizmo().setGizmoRotZControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_ALT);
+
+    // Now call viewportSize with the dimension of window/screen
+    // It is need to set mouse sensitivity for rotation
+    // You need to call it also in your "reshape" function: when resize the window (look below)
+    getGizmo().viewportSize(GetWidth(), GetHeight());
+}    
+```
+Now you need to add some *event* funtions:
+
+In your *Mouse-Button Event* function need to call:
 ```cpp
 void onMouseButton(int button, int upOrDown, int x, int y)
 {
-    //  Call on mouse button event
+    //  Call in 'mouse button event' the gizmo.mouse() func with:
     //      button:  your mouse button
     //      mod:     your modifier key -> CTRL, SHIFT, ALT, SUPER
     //      pressed: if button is pressed (TRUE) or released (FALSE)
     //      x, y:    mouse coordinates
-
-    getGizmo().mouse((vgButtons) (button), (vgModifiers) theApp->getModifier(), 
-                     upOrDown==GLFW_PRESS, x, y);
+    bool isPressed = upOrDown==GLFW_PRESS; // or upOrDown==SDL_MOUSEBUTTONDOWN for SDL
+    getGizmo().mouse((vgButtons) (button), (vgModifiers) theApp->getModifier(), isPressed, x, y);
 
 }
 ```
 
-In your Mouse_Move_Callback function call:
+In your *Mouse-Motion Event* function need to call:
 ```cpp
 void onMotion(int x, int y)
 {
@@ -87,7 +111,7 @@ void onMotion(int x, int y)
 }
 ```
 
-And in your Resize_Window_Callback function 
+And in your *Resize-Window Event* function :
 ```cpp
 void onReshape(GLint w, GLint h)
 {
@@ -111,6 +135,7 @@ void onRender() //or when you prefer
 }
 ```
 
+<p>&nbsp;<br></p>
  
 ### Other useful stuff
 
@@ -155,18 +180,25 @@ typedef virtualGizmo3DClass<float> vfGizmo3DClass;
 typedef virtualGizmoClass<double>   vdGizmoClass;
 typedef virtualGizmo3DClass<double> vdGizmo3DClass;
 ```
+<p>&nbsp;<br></p>
 
 ### Building Example
 
-The example shown in the screenshot is provided.
+The source code example shown in the animated gif screenshot, is provided.
+
+In  example I use **GLFW** or **SDL2** (via `#define GLAPP_USE_SDL`) with **OpenGL**, but it is simple to change if you use Vulkan/DirectX/etc, other frameworks (like GLUT) or native OS access.
+
+To use SDL framework instead of GLFW, uncomment `#define GLAPP_USE_SDL` in `glApp.h` file, or pass `-DGLAPP_USE_SDL` directly to compiler.
+
 To build it you can use CMake (3.10 or higher) or the Visual Studio solution project (for VS 2017) in Windows.
-You need to have installed [**GLFW**](https://www.glfw.org/) and [**glm**](https://github.com/g-truc/glm) in your compiler search path (LIB/INCLUDE)
+You need to have [**GLFW**](https://www.glfw.org/) (or [**SDL**](https://libsdl.org/)) in your compiler search path (LIB/INCLUDE). Instead copy of [**glm**](https://github.com/g-truc/glm) is attached and included in the example.
 
 The CMake file is able to build also an [**EMSCRIPTEN**](https://kripken.github.io/emscripten-site/index.html) version, obviously you need to have installed EMSCRIPTEN SDK on your computer (1.38.10 or higher): look at or use the helper batch/script files, in main example folder, to pass appropriate defines/patameters to CMake command line.
 
 To build the EMSCRIPTEN version, in Windows, with CMake, need to have **mingw32-make.exe** in your computer and search PATH (only the make utility is enough): it is a condition of EMSDK tool to build with CMake.
 
 **For windows users that use vs2017 project solution:**
-The current VisualStudio project solution refers to my environment variable RAMDISK (`R:`), and subsequent VS intrinsic variables to generate binary output:
-`$(RAMDISK)\$(MSBuildProjectDirectoryNoRoot)\$(DefaultPlatformToolset)\$(Platform)\$(Configuration)\` 
-Even without a RAMDISK variable, executable and binary files are outputted in base to the values of these VS variables, starting from root of current drive.
+
+* If you have **GLFW** and/or **SDL** headers/library directory paths added to `INCLUDE` and `LIB` environment vars, the compiler find them.
+* The current VisualStudio project solution refers to my environment variable RAMDISK (`R:`), and subsequent VS intrinsic variables to generate binary output:
+`$(RAMDISK)\$(MSBuildProjectDirectoryNoRoot)\$(DefaultPlatformToolset)\$(Platform)\$(Configuration)\`, so without a RAMDISK variable, executable and binary files are outputted in base to the values of these VS variables, starting from root of current drive. &nbsp;&nbsp; *(you find built binary here... or change it)*

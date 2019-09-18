@@ -3,12 +3,12 @@
 You can also define a way to rotate the model around any single axis.
 It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like *Shift/Ctrl/Alt/Super*, that you define
 
+It uses **quaternions** algebra, internally, to manage rotations, but you can also only pass your model matrix and gat back a transormation matrix with rotation, translazion and scale, inside.
+
 ![alt text](https://raw.githubusercontent.com/BrutPitt/virtualGizmo3D/master/screenshots/oglGizmo.gif)
 
-**virtualGizmo3D** internally uses quaternions to rotate the model, but You can also only pass your model matrix and gat back a transormation matrix with rotation, translazion and scale, inside.
-
-**virtualGizmo3D** is an *header only* tool. 
-It does not depend on any framework or graphic engine: uses the simply [**glm** mathematics library](https://github.com/g-truc/glm) (0.9.9 or higher), also it an *header only* tool.
+**virtualGizmo3D** is an *header only* tool and **is not bound to frameworks or render engines**: it uses simply [**glm** mathematics library](https://github.com/g-truc/glm) (0.9.9 or higher), also it an *header only* tool.
+In this way you can use it with any engine, like: *OpenGL, DirectX, Vulkan, Metal, etc.* and/or  with any framework, like: *GLFW, SDL, GLUT, Native O.S. calls, etc.*
 
 ### Live WebGL2 example
 You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from following link:

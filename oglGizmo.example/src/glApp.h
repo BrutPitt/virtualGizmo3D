@@ -1,38 +1,15 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2018 Michele Morrone
+//------------------------------------------------------------------------------
+//  Copyright (c) 2018-2019 Michele Morrone
 //  All rights reserved.
 //
-//  mailto:me@michelemorrone.eu
-//  mailto:brutpitt@gmail.com
+//  https://michelemorrone.eu - https://BrutPitt.com
+//
+//  twitter: https://twitter.com/BrutPitt - github: https://github.com/BrutPitt
+//
+//  mailto:brutpitt@gmail.com - mailto:me@michelemorrone.eu
 //  
-//  https://github.com/BrutPitt
-//
-//  https://michelemorrone.eu
-//  https://BrutPitt.com
-//
-//  This software is distributed under the terms of the BSD 2-Clause license:
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//      * Redistributions of source code must retain the above copyright
-//        notice, this list of conditions and the following disclaimer.
-//      * Redistributions in binary form must reproduce the above copyright
-//        notice, this list of conditions and the following disclaimer in the
-//        documentation and/or other materials provided with the distribution.
-//   
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-//  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
-//  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-////////////////////////////////////////////////////////////////////////////////
+//  This software is distributed under the terms of the BSD 2-Clause license
+//------------------------------------------------------------------------------
 #pragma once
 
 #include <string>
@@ -40,7 +17,18 @@
 #include <vector>
 #include <iomanip>
 #include <iostream>
-#include <GLFW/glfw3.h>
+
+#if !defined(__EMSCRIPTEN__)
+    //#define GLAPP_USE_SDL
+#endif
+
+#ifdef GLAPP_USE_SDL
+    #include <SDL.h>
+    #include <SDL_opengl.h>
+#else
+    #include <GLFW/glfw3.h>
+#endif
+
 #ifdef GLAPP_USE_IMGUI
 #include "ui\uiMainDlg.h"
 #endif
@@ -82,12 +70,17 @@ public:
     int onExit();
 
     void mainLoop();
-////////////////////////////////
-//GLFW Utils
-    GLFWwindow* getGLFWWnd()  const { return(mainGLFWwnd);  }
-
     glWindow *getEngineWnd() { return glEngineWnd; }
+
+////////////////////////////////
+// SDL / GLFW Windows
+#ifdef GLAPP_USE_SDL
+    SDL_Window* getSDLWWnd()  const { return(mainSDLWwnd);  }
+    void setSDLWWnd(SDL_Window* wnd) { mainSDLWwnd = wnd; }
+#else
+    GLFWwindow* getGLFWWnd()  const { return(mainGLFWwnd);  }
     void setGLFWWnd(GLFWwindow* wnd) { mainGLFWwnd = wnd; }
+#endif
 
 	int getXPosition() const { return(xPosition); }
     int getYPosition() const { return(yPosition); }
@@ -114,13 +107,20 @@ private:
 
 private:
 
-// glfw utils
+// SDL / GLFW utils
 /////////////////////////////////////////////////
-    void glfwInit();
-    int glfwExit();
+#ifdef GLAPP_USE_SDL
+    void frameInit();
+    int frameExit();
+    SDL_Window* mainSDLWwnd;
+    SDL_GLContext gl_context;
+#else
+    void frameInit();
+    int frameExit();
+    GLFWwindow* mainGLFWwnd;
+#endif
     int getModifier();
 
-    GLFWwindow* mainGLFWwnd;
     glWindow *glEngineWnd;
 
 friend class glWindow;

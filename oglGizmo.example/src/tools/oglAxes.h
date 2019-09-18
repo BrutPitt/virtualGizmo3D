@@ -165,7 +165,7 @@ public:
         delete transforms;
     }
 
-    void initShaders(const char *vtxDefs="", const char *fragDefs="");
+    void initShaders();
     void render();
     void renderOnFB(GLuint frameBuffer) {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);

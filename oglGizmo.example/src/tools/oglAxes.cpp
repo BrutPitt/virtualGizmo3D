@@ -283,8 +283,20 @@ void buildCube(std::vector<glm::vec3> &cubeVtx, const float size)
 }
 
 
-void oglAxes::initShaders(const char *vtxDefs, const char *fragDefs) 
+void oglAxes::initShaders() 
 {
+#ifdef __EMSCRIPTEN__
+        const char *vtxDefs = "#version 300 es\nprecision mediump float;\n";
+        const char *fragDefs = "#version 300 es\nprecision mediump float;\n";
+#else
+    #ifdef GLAPP_NO_GLSL_PIPELINE
+        const char *vtxDefs = "#version 430\n";
+    #else
+        const char *vtxDefs = "#version 410\n#define GLAPP_USE_PIPELINE\n";
+    #endif
+        const char *fragDefs = "#version 410\n";
+#endif
+
     useVertex(); useFragment();
 
 	getVertex()->Load(vtxDefs, 1, SHADER_PATH "oglAxesVert.glsl");
@@ -297,6 +309,7 @@ void oglAxes::initShaders(const char *vtxDefs, const char *fragDefs)
 	link();
 
     bindPipeline();
+
     useProgram();
 
     _pMat  = getUniformLocation("pMat");

@@ -1,38 +1,15 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2018 Michele Morrone
+//------------------------------------------------------------------------------
+//  Copyright (c) 2018-2019 Michele Morrone
 //  All rights reserved.
 //
-//  mailto:me@michelemorrone.eu
-//  mailto:brutpitt@gmail.com
+//  https://michelemorrone.eu - https://BrutPitt.com
+//
+//  twitter: https://twitter.com/BrutPitt - github: https://github.com/BrutPitt
+//
+//  mailto:brutpitt@gmail.com - mailto:me@michelemorrone.eu
 //  
-//  https://github.com/BrutPitt
-//
-//  https://michelemorrone.eu
-//  https://BrutPitt.com
-//
-//  This software is distributed under the terms of the BSD 2-Clause license:
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//      * Redistributions of source code must retain the above copyright
-//        notice, this list of conditions and the following disclaimer.
-//      * Redistributions in binary form must reproduce the above copyright
-//        notice, this list of conditions and the following disclaimer in the
-//        documentation and/or other materials provided with the distribution.
-//   
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-//  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
-//  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-////////////////////////////////////////////////////////////////////////////////
+//  This software is distributed under the terms of the BSD 2-Clause license
+//------------------------------------------------------------------------------
 #include <chrono>
 #include <array>
 #include <vector>
@@ -49,17 +26,79 @@
 #include "glWindow.h"
 
 
-#ifndef __EMSCRIPTEN__
-    GLFWmonitor* getCurrentMonitor(GLFWwindow *window);
-    void toggleFullscreenOnOff(GLFWwindow* window);
-    bool isDoubleClick(int button, int action, double x, double y, double ms);    
-#endif
  
 
 // Set the application to null for the linker
 mainGLApp* mainGLApp::theMainApp = 0;
 
 
+#ifdef GLAPP_USE_SDL
+void mainGLApp::frameInit()
+{
+    // Setup SDL
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        return ;
+    }
+
+    // Decide GL+GLSL versions
+#if __APPLE__
+    // GL 3.2 Core + GLSL 150
+    const char* glsl_version = "#version 150";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#else
+    // GL 3.0 + GLSL 130
+    const char* glsl_version = "#version 130";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    #ifdef GLAPP_REQUIRE_OGL45
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+    #else
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    #endif
+#endif
+
+    // Create window with graphics context
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_DisplayMode current;
+    SDL_GetCurrentDisplayMode(0, &current);
+    windowTitle+=" - SDL"; 
+    mainSDLWwnd = SDL_CreateWindow(getWindowTitle(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GetWidth(), GetHeight(), SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
+    gl_context = SDL_GL_CreateContext(mainSDLWwnd);
+    SDL_GL_SetSwapInterval(1); // Enable vsync
+
+    gladLoadGL();
+}
+
+int mainGLApp::frameExit()
+{
+    SDL_GL_DeleteContext(gl_context);
+    SDL_DestroyWindow(mainSDLWwnd);
+    SDL_Quit();
+    return 0;
+
+}
+int mainGLApp::getModifier() {
+    SDL_Keymod key = SDL_GetModState();
+    if(key & KMOD_ALT) return KMOD_ALT;
+    else if(key & KMOD_SHIFT) return KMOD_SHIFT;
+    else if(key & KMOD_CTRL) return KMOD_CTRL;
+    else return 0;
+}
+#else
+
+#ifndef __EMSCRIPTEN__
+    GLFWmonitor* getCurrentMonitor(GLFWwindow *window);
+    void toggleFullscreenOnOff(GLFWwindow* window);
+    bool isDoubleClick(int button, int action, double x, double y, double ms);    
+#endif
 
 static void glfwErrorCallback(int error, const char* description)
 {
@@ -230,7 +269,7 @@ GLFWwindow *secondary;
 
 // glfw utils
 /////////////////////////////////////////////////
-void mainGLApp::glfwInit()
+void mainGLApp::frameInit()
 {
     glfwSetErrorCallback(glfwErrorCallback);
 
@@ -246,7 +285,7 @@ void mainGLApp::glfwInit()
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     #else
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     #endif
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
@@ -254,7 +293,7 @@ void mainGLApp::glfwInit()
     glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
     glfwWindowHint(GLFW_DEPTH_BITS, 32);
     
-
+    windowTitle+=" - GLFW"; 
     setGLFWWnd(glfwCreateWindow(GetWidth(), GetHeight(), getWindowTitle(), NULL, NULL));
     if (!getGLFWWnd())
     {
@@ -262,33 +301,10 @@ void mainGLApp::glfwInit()
         exit(EXIT_FAILURE);
     }
 
-    //secondary = glfwCreateWindow(512, 512, "My Engine", NULL, getGLFWWnd());
-
     glfwMakeContextCurrent(getGLFWWnd());
 
-    //glfwSetWindowOpacity(getGLFWWnd(),.5);
-
-#ifdef __EMSCRIPTEN__
-/*
-    emscripten_set_mousedown_callback("#canvas", nullptr, true, 
-        [](int, const EmscriptenMouseEvent* e, void*)->EMSCRIPTEN_RESULT {
-            if ((e->button >= 0) && (e->button < 3)) {
-                ImGui::GetIO().MouseDown[e->button] = true;
-            }
-            return true;
-        });
-    emscripten_set_mouseup_callback("#canvas", nullptr, true, 
-        [](int, const EmscriptenMouseEvent* e, void*)->EMSCRIPTEN_RESULT {
-            if ((e->button >= 0) && (e->button < 3)) {
-                ImGui::GetIO().MouseDown[e->button] = false;
-            }
-            return true;
-        });
-*/
-#else
     //Init OpenGL
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
-#endif
 
     glfwSetKeyCallback(getGLFWWnd(), glfwKeyCallback);
     glfwSetCharCallback(getGLFWWnd(), glfwCharCallback);
@@ -301,7 +317,7 @@ void mainGLApp::glfwInit()
 
 }
 
-int mainGLApp::glfwExit()
+int mainGLApp::frameExit()
 {
 
     glfwDestroyWindow(getGLFWWnd());
@@ -322,7 +338,7 @@ int mainGLApp::getModifier() {
             return GLFW_MOD_ALT;
     else return 0;
 }
-
+#endif
 
 mainGLApp::mainGLApp() 
 {    
@@ -343,13 +359,13 @@ void mainGLApp::onInit()
 
     xPosition = yPosition = -1;
     width = 512; height = 512;
-    windowTitle = "oglApp";
+    windowTitle = "VirtualGizmo3D";
 
 //Init OpenGL
 
 
 // Imitialize both FrameWorks
-    glfwInit();
+    frameInit();
 
 // Imitialize both GL engine
     glEngineWnd->onInit();
@@ -362,7 +378,7 @@ int mainGLApp::onExit()
     glEngineWnd->onExit();
 // Exit from both FrameWorks
 
-    glfwExit();
+    frameExit();
 
 // need to test returns code... now 0!        
     return 0;
@@ -379,13 +395,48 @@ void newFrame()
     theWnd->onRender();
 
 
+#ifdef GLAPP_USE_SDL
+    SDL_GL_SwapWindow(theApp->getSDLWWnd());
+#else
+    //glfwMakeContextCurrent(theApp->getGLFWWnd());
     glfwSwapBuffers(theApp->getGLFWWnd());
+#endif
 
 }
 
 
 void mainGLApp::mainLoop() 
 {
+#ifdef GLAPP_USE_SDL
+
+        // Main loop
+    bool done = false;
+    while (!done)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+                done = true;
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(mainSDLWwnd))
+                done = true;
+            if (event.type == SDL_MOUSEBUTTONDOWN) {
+                theWnd->onMouseButton(event.button.button, SDL_MOUSEBUTTONDOWN, event.button.x, event.button.y); 
+            }
+            if (event.type == SDL_MOUSEBUTTONUP) {
+                theWnd->onMouseButton(event.button.button, SDL_MOUSEBUTTONUP, event.button.x, event.button.y);
+            }
+            if (event.type == SDL_MOUSEMOTION) {
+                theWnd->onMotion(event.motion.x, event.motion.y);
+            }
+
+
+        }
+        newFrame();
+    }
+
+#else
+
     while (!glfwWindowShouldClose(getGLFWWnd())) {          
 
         glfwPollEvents();
@@ -394,7 +445,7 @@ void mainGLApp::mainLoop()
 
         }
     }
-
+#endif
 }
 
 /////////////////////////////////////////////////

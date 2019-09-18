@@ -1,38 +1,15 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2018 Michele Morrone
+//------------------------------------------------------------------------------
+//  Copyright (c) 2018-2019 Michele Morrone
 //  All rights reserved.
 //
-//  mailto:me@michelemorrone.eu
-//  mailto:brutpitt@gmail.com
+//  https://michelemorrone.eu - https://BrutPitt.com
+//
+//  twitter: https://twitter.com/BrutPitt - github: https://github.com/BrutPitt
+//
+//  mailto:brutpitt@gmail.com - mailto:me@michelemorrone.eu
 //  
-//  https://github.com/BrutPitt
-//
-//  https://michelemorrone.eu
-//  https://BrutPitt.com
-//
-//  This software is distributed under the terms of the BSD 2-Clause license:
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//      * Redistributions of source code must retain the above copyright
-//        notice, this list of conditions and the following disclaimer.
-//      * Redistributions in binary form must reproduce the above copyright
-//        notice, this list of conditions and the following disclaimer in the
-//        documentation and/or other materials provided with the distribution.
-//   
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-//  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
-//  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-////////////////////////////////////////////////////////////////////////////////
+//  This software is distributed under the terms of the BSD 2-Clause license
+//------------------------------------------------------------------------------
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -65,26 +42,23 @@ void glWindow::onInit()
 
     axes = new oglAxes(true);
     axes->setBackgroundColor(glm::vec4(.25));
-
-#ifdef __EMSCRIPTEN__
-        const char *vtxDefs = "#version 300 es\nprecision mediump float;\n";
-        const char *fragDefs = "#version 300 es\nprecision mediump float;\n";
-#else
-    #ifdef GLAPP_NO_GLSL_PIPELINE
-        const char *vtxDefs = "#version 430\n";
-    #else
-        const char *vtxDefs = "#version 410\n#define GLAPP_USE_PIPELINE\n";
-    #endif
-        const char *fragDefs = "#version 410\n";
-#endif
-
-    axes->initShaders(vtxDefs, fragDefs); 
+    axes->initShaders(); 
 
 
 
     glViewport(0,0,theApp->GetWidth(), theApp->GetHeight());
 
     //If do not using GLFW, simply use your ID defines 
+#ifdef GLAPP_USE_SDL
+    getGizmo().setGizmoRotControl( (vgButtons) SDL_BUTTON_LEFT, (vgModifiers) 0 /* evNoModifier */ );
+
+    getGizmo().setGizmoRotXControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_SHIFT);
+    getGizmo().setGizmoRotYControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_CTRL);
+    getGizmo().setGizmoRotZControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_ALT);
+
+    getGizmo().setDollyControl((vgButtons) SDL_BUTTON_RIGHT, (vgModifiers) 0);
+    getGizmo().setPanControl(  (vgButtons) SDL_BUTTON_RIGHT, (vgModifiers) KMOD_CTRL|KMOD_SHIFT);
+#else
     getGizmo().setGizmoRotControl( (vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) 0 /* evNoModifier */ );
 
     getGizmo().setGizmoRotXControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_SHIFT);
@@ -93,6 +67,7 @@ void glWindow::onInit()
 
     getGizmo().setDollyControl((vgButtons) GLFW_MOUSE_BUTTON_RIGHT, (vgModifiers) 0);
     getGizmo().setPanControl(  (vgButtons) GLFW_MOUSE_BUTTON_RIGHT, (vgModifiers) GLFW_MOD_CONTROL|GLFW_MOD_SHIFT);
+#endif
     //getGizmo().setPanControls(  (vgButtons) GLFW_MOUSE_BUTTON_RIGHT, (vgModifiers) GLFW_MOD_SHIFT);
 
     // viewportSize  is need to set mouse sensitivity for rotation
@@ -223,7 +198,11 @@ void glWindow::onMouseButton(int button, int upOrDown, int x, int y)
     //      x, y:    mouse coordinates
     getGizmo().mouse((vgButtons) (button),
                          (vgModifiers) theApp->getModifier(),
-                          upOrDown==GLFW_PRESS, x, y);
+#ifdef GLAPP_USE_SDL
+                    upOrDown==SDL_MOUSEBUTTONDOWN, x, y);
+#else
+                    upOrDown==GLFW_PRESS, x, y);
+#endif
 
 }
 

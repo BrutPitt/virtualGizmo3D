@@ -37,9 +37,7 @@ In your 3D engine *initalization* declare (overriding default ones) your preferr
 ```cpp
 void onInit()
 {
-
-    //If do not using GLFW, simply use your ID defines 
-    //You can freely define any button or key modifier you prefer
+    //If you use a different framework simply associate internal ID with your preferences
 
     //For main manipulator/rotation
     getGizmo().setGizmoRotControl( (vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) 0 /* evNoModifier */ );
@@ -47,16 +45,19 @@ void onInit()
     //for pan and zoom/dolly... you can use also wheel to zoom
     getGizmo().setDollyControl((vgButtons) GLFW_MOUSE_BUTTON_RIGHT, (vgModifiers) GLFW_MOD_CONTROL|GLFW_MOD_SHIFT);
     getGizmo().setPanControl(  (vgButtons) GLFW_MOUSE_BUTTON_RIGHT, (vgModifiers) 0);
-    
-    //If you need, for rotations around a single axis with key modifiers
-    getGizmo().setGizmoRotXControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_SHIFT);
-    getGizmo().setGizmoRotYControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_CONTROL);
-    getGizmo().setGizmoRotZControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_ALT | GLFW_MOD_SUPER);
 
     // Now call viewportSize with the dimension of window/screen
     // It is need to set mouse sensitivity for rotation
     // You need to call it also in your "reshape" function: when resize the window (look below)
     getGizmo().viewportSize(GetWidth(), GetHeight());
+
+    // more... 
+    // if you need to rotate around a single axis have to select your preferences: uncomment below...
+    //
+    // getGizmo().setGizmoRotXControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_SHIFT); // around X pressing SHIFT+LButton
+    // getGizmo().setGizmoRotYControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_CONTROL); // around Y pressing CTRL+LButton
+    // getGizmo().setGizmoRotZControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_ALT | GLFW_MOD_SUPER); // around Z pressing ALT|SUPER+LButton
+
 
 }    
 ```
@@ -65,7 +66,7 @@ void onInit()
 ```cpp
 void onInit()
 {
-    //You can freely define any button or key modifier you prefer
+    //If you use a different framework simply associate internal ID with your preferences
 
     //For main manipulator/rotation
     getGizmo().setGizmoRotControl( (vgButtons) SDL_BUTTON_LEFT, (vgModifiers) 0 /* evNoModifier */ );
@@ -74,15 +75,18 @@ void onInit()
     getGizmo().setDollyControl((vgButtons) SDL_BUTTON_RIGHT, (vgModifiers) 0);
     getGizmo().setPanControl(  (vgButtons) SDL_BUTTON_RIGHT, (vgModifiers) KMOD_CTRL|KMOD_SHIFT);
 
-    //If you need, for rotations around a single axis with key modifiers
-    getGizmo().setGizmoRotXControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_SHIFT);
-    getGizmo().setGizmoRotYControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_CTRL);
-    getGizmo().setGizmoRotZControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_ALT);
-
     // Now call viewportSize with the dimension of window/screen
     // It is need to set mouse sensitivity for rotation
     // You need to call it also in your "reshape" function: when resize the window (look below)
     getGizmo().viewportSize(GetWidth(), GetHeight());
+
+    // more... 
+    // if you need to rotate around a single axis have to select your preferences: uncomment below...
+    //
+    // getGizmo().setGizmoRotXControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_SHIFT); // around X pressing SHIFT+LButton
+    // getGizmo().setGizmoRotYControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_CTRL); // around Y pressing CTRL+LButton
+    // getGizmo().setGizmoRotZControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_ALT); // around Z pressing ALT+LButton
+
 }    
 ```
 Now you need to add some *event* funtions:
@@ -168,9 +172,11 @@ void onIdle()
 }
 ```
 
+**Class declaration**
+
 The include file `virtualGizmo.h` contains two classes:
-- `virtualGizmoClass<T>` simple rotation manipulator, used mainly for imGuIZMO (a GIZMO widget developed for ImGui user intefrace)
-- `virtualGizmo3DClass<T>` manipulator with dolly/zoom and pan/translatior
+- `virtualGizmoClass<T>` simple rotation manipulator, used mainly for [**imGuIZMO.quat**](https://github.com/BrutPitt/imGuIZMO.quat) (a GIZMO widget developed for ImGui, Graphic User Intefrace)
+- `virtualGizmo3DClass<T>` manipulator (like above) with dolly/zoom and pan/shift
 
 Helper `typedef` are also defined:
 ```cpp

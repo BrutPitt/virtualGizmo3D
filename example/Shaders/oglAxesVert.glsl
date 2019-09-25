@@ -10,7 +10,7 @@
 //  
 //  This software is distributed under the terms of the BSD 2-Clause license
 //------------------------------------------------------------------------------
-#line 12
+#line 14
 layout (location = 1) in vec3 vPos;
 layout (location = 2) in vec3 normal;
 

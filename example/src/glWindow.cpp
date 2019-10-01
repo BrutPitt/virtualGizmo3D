@@ -10,18 +10,15 @@
 //  
 //  This software is distributed under the terms of the BSD 2-Clause license
 //------------------------------------------------------------------------------
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "tools/oglAxes.h"
 #include "glWindow.h"
 
-#include "tools/virtualGizmo.h"
+#include "tools/vGizmo.h"
 
 
 // Global variable or member class
-vfGizmo3DClass gizmo; 
-vfGizmo3DClass &getGizmo() { return gizmo; }
+vg::vGizmo3D gizmo; 
+vg::vGizmo3D &getGizmo() { return gizmo; }
 
 
 glWindow::glWindow() 
@@ -52,7 +49,7 @@ void glWindow::onInit()
 #endif
 
     axes = new oglAxes(true);
-    axes->setBackgroundColor(glm::vec4(.25));
+    axes->setBackgroundColor(vec4(.25f));
     axes->initShaders(vtxDefs, fragDefs); 
 
 
@@ -118,7 +115,7 @@ void glWindow::onRender()
 {
     
     
-    glm::mat4 m(1.0f);                          // Identity matrix
+    mat4 m(1.0f);                          // Identity matrix
 
     // virtualGizmo transformations
     getGizmo().applyTransform(m);           // apply transform to Matrix
@@ -152,7 +149,7 @@ void glWindow::onReshape(GLint w, GLint h)
     glViewport(0,0,w,h);
     theApp->SetWidth(w); theApp->SetHeight(h);
     
-    axes->getTransforms()->setPerspective((h == 0 | w == 0) ? 1.0 : float(w)/(float(h)));
+    axes->getTransforms()->setPerspective((h == 0 || w == 0) ? 1.0f : float(w)/(float(h)));
 
     // call it on resize window to re-align mouse sensitivity
     getGizmo().viewportSize(w, h);

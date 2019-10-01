@@ -7,27 +7,33 @@ It uses **quaternions** algebra, internally, to manage rotations, but you can al
 
 ![alt text](https://raw.githubusercontent.com/BrutPitt/virtualGizmo3D/master/screenshots/oglGizmo.gif)
 
-**virtualGizmo3D** is an *header only* tool and **is not bound to frameworks or render engines**: it uses simply [**glm** mathematics library](https://github.com/g-truc/glm) (0.9.9 or higher), also it an *header only* tool.
+**virtualGizmo3D** is an *header only* tool (`vGizmo.h`) and **is not bound to frameworks or render engines**, is written in C++ (C++11) and uses `vGizmoMath.h` a small vectors/matrices/quaternions tool (for internal math operations) that makes **virtualGizmo3D** standalone.
+
 In this way you can use it with any engine, like: *OpenGL, DirectX, Vulkan, Metal, etc.* and/or  with any framework, like: *GLFW, SDL, GLUT, Native O.S. calls, etc.*
+
+You can use **vGizmoMath** also externally, for your purposes, both as ***simple* float classes** (*Default*) or as **template classes** for both `float` and `double` data types, or as alternative to it is also possible to interface **virtualGizmo3D** with [**glm** mathematics library](https://github.com/g-truc/glm) (*all by simply adding a* `#define`)
+
+==>&nbsp; **Please, read **Configure** section, below.*
+<p>&nbsp;<br></p>
+
 
 ### Live WebGL2 example
 You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from following link:
 - [virtualGizmo3D WebGL2](https://www.michelemorrone.eu/emsExamples/oglGizmo.html)
 
-It works only on browsers with **WebGl 2** and *webassembly* support (FireFox/Opera/Chrome and Chromium based).
-
-Test if your browser supports WebGL 2, here: [WebGL2 Report](http://webglreport.com/?v=2)
+It works only on browsers with **WebGl2** and *webAssembly* support (FireFox/Opera/Chrome and Chromium based): test if your browser supports **WebGL2**, here: [WebGL2 Report](http://webglreport.com/?v=2)
 
 ### How to use virtualGizmo3D in your code
 
 To use **virtualGizmo3D** need to include `virtualGizmo.h` file in your code and declare an object of type vfGizmo3DClass, global or as member of your class 
 
 ```cpp
-#include "virtualGizmo.h"
+#include "vGizmo.h"
 
 // Global or member class declaration
-vfGizmo3DClass gizmo; 
-vfGizmo3DClass &getGizmo() { return gizmo; }  //optional helper
+using namespace vg;
+vGizmo3D gizmo; 
+vGizmo3D &getGizmo() { return gizmo; }  //optional helper
 ```
 
 In your 3D engine *initalization* declare (overriding default ones) your preferred controls:
@@ -174,21 +180,85 @@ void onIdle()
 
 **Class declaration**
 
-The include file `virtualGizmo.h` contains two classes:
-- `virtualGizmoClass<T>` simple rotation manipulator, used mainly for [**imGuIZMO.quat**](https://github.com/BrutPitt/imGuIZMO.quat) (a GIZMO widget developed for ImGui, Graphic User Intefrace)
-- `virtualGizmo3DClass<T>` manipulator (like above) with dolly/zoom and pan/shift
+The include file `vGizmo.h` contains two classes:
+- `virtualGizmoClass` simple rotation manipulator, used mainly for [**imGuIZMO.quat**](https://github.com/BrutPitt/imGuIZMO.quat) (a GIZMO widget developed for ImGui, Graphic User Intefrace)
+- `virtualGizmo3DClass` manipulator (like above) with dolly/zoom and pan/shift
+- Template classes are also available if configured. &nbsp; **(read below)*
 
 Helper `typedef` are also defined:
 ```cpp
-typedef virtualGizmoClass<float>   vfGizmoClass;
-typedef virtualGizmo3DClass<float> vfGizmo3DClass;
-
-typedef virtualGizmoClass<double>   vdGizmoClass;
-typedef virtualGizmo3DClass<double> vdGizmo3DClass;
+    using vGizmo    = virtualGizmoClass;
+    using vGizmo3D  = virtualGizmo3DClass;
 ```
 <p>&nbsp;<br></p>
 
-### Building Example
+## Configure ImGuIZMO.quat ==> vGizmoConfig.h
+**virtalGizmo3D** uses **vGizmoMath** tool, it contains a group of vector/matrices/quaternion classes, operators, and principal functions. It uses the "glsl" convention for types and function names so is compatible with **glm** types and function calls: **vGizmoMath** is a subset of [**glm** mathematics library](https://github.com/g-truc/glm) and so you can use one or the other via simple `#define`.
+
+It does not want replicate **glm**, is only intended to make **virtalGizmo3D** standalone, and avoid **template classes** use in the cases of low resources.
+
+The file `vGizmoConfig.h` allows to configure internal math used form **virtalGizmo3D**. In particular is possible select between:
+ - static **float** classes (*Default*) / temlpate classes 
+ - internal **vGizmoMath** tool (*Default*) / **glm** mathematics library
+ - **Right** (*Default*) / **Left** handed coordinate system (*lookAt, perspective, ortho, frustrum - functions*)
+
+You can do this simply by commenting / uncommenting the line in `vGizmoConfig.h` or adding related "define" to your project, as you can see below:
+
+
+
+```cpp
+// uncomment to use TEMPLATE internal vGizmoMath classes/types
+//
+// This is if you need to extend the use of different math types in your code
+//      or for your purposes:
+//          float  ==>  vec2 /  vec3 /  vec4 /  quat /  mat3 /  mat4
+//          double ==> dvec2 / dvec3 / dvec4 / dquat / dmat3 / dmat4
+// If you select TEMPLATE classes the widget too will use internally them 
+//      with single precision (float)
+//
+// Default ==> NO template
+//------------------------------------------------------------------------------
+//#define VGIZMO_USES_TEMPLATE
+```
+```cpp
+// uncomment to use "glm" (0.9.9 or higher) library instead of vGizmoMath
+//      Need to have "glm" installed and in your INCLUDE research compiler path
+//
+// vGizmoMath is a subset of "glm" and is compatible with glm types and calls
+//      change only namespace from "vgm" to "glm". It's automatically set by
+//      including vGizmo.h or vGizmoMath.h or imGuIZMOquat.h
+//
+// Default ==> use vGizmoMath
+//      If you enable GLM use, automatically is enabled also VGIZMO_USES_TEMPLATE
+//          if you can, I recommend to use GLM
+//------------------------------------------------------------------------------
+//#define VGIZMO_USES_GLM
+```
+```cpp
+// uncomment to use LeftHanded 
+//
+// This is used only in: lookAt / perspective / ortho / frustrum - functions
+//      DX is LeftHanded, OpenGL is RightHanded
+//
+// Default ==> RightHanded
+//------------------------------------------------------------------------------
+//#define VGIZMO_USES_LEFT_HAND_AXES
+```
+**If your project is not limited from low resources, I recommend to use **glm***
+<p>&nbsp;<br></p>
+
+## Changes from v. 1.0
+
+Users of the previous version need:
+ - change `#include <virtualGizmo3D.h>` &nbsp; ==> &nbsp; `#include <vGizmo3D.h>`
+ - adding `using namespace vg`
+ - change typedef `vfGizmoClass`/`vfGizmoClass3D` &nbsp; ==> &nbsp; `vGizmo`/`vGizmo3D`
+    - now declare: `vg::vGizmo3D gizmo;`
+ - in file `vGizmoConfig.h` uncomment `#define VGIZMO_USES_GLM` to continue to use **glm**, or add `VGIZMO_USES_GLM` to compiler preprocessor defines.
+
+<p>&nbsp;<br></p>
+
+## Building Example
 
 The source code example shown in the animated gif screenshot, is provided.
 
@@ -204,7 +274,7 @@ The CMake file is able to build also an [**EMSCRIPTEN**](https://kripken.github.
 To build the EMSCRIPTEN version, in Windows, with CMake, need to have **mingw32-make.exe** in your computer and search PATH (only the make utility is enough): it is a condition of EMSDK tool to build with CMake.
 
 **For windows users that use vs2017 project solution:**
-
+* To build **SDL** or **GLFW**, select appropriate build configuration
 * If you have **GLFW** and/or **SDL** headers/library directory paths added to `INCLUDE` and `LIB` environment vars, the compiler find them.
 * The current VisualStudio project solution refers to my environment variable RAMDISK (`R:`), and subsequent VS intrinsic variables to generate binary output:
 `$(RAMDISK)\$(MSBuildProjectDirectoryNoRoot)\$(DefaultPlatformToolset)\$(Platform)\$(Configuration)\`, so without a RAMDISK variable, executable and binary files are outputted in base to the values of these VS variables, starting from root of current drive. &nbsp;&nbsp; *(you find built binary here... or change it)*

@@ -11,12 +11,9 @@
 //  This software is distributed under the terms of the BSD 2-Clause license
 //------------------------------------------------------------------------------
 #pragma once
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 
 #include "glApp.h"
-#include "tools/virtualGizmo.h"
+#include "tools/vGizmo.h"
 
 
 /*

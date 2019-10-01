@@ -62,13 +62,19 @@
     <ClInclude Include="..\tools\glslShaderObject.h">
       <Filter>tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\tools\virtualGizmo.h">
-      <Filter>tools</Filter>
-    </ClInclude>
     <ClInclude Include="..\tools\transforms.h">
       <Filter>tools</Filter>
     </ClInclude>
     <ClInclude Include="..\tools\oglAxes.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tools\vGizmo.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tools\vGizmoConfig.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tools\vGizmoMath.h">
       <Filter>tools</Filter>
     </ClInclude>
   </ItemGroup>

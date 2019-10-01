@@ -68,7 +68,7 @@ echo.
 echo.
 echo. Start mingw32-make 
 echo.
-mingw32-make
+mingw32-make -j 8
 echo.
 echo.
 

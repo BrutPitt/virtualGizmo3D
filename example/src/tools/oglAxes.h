@@ -22,9 +22,6 @@
 #include "../glApp.h"
 #include "transforms.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 //#define GLAPP_MINIMIZE_VERTEX
 
 
@@ -33,11 +30,11 @@ void buildConeFan(std::vector<glm::vec3> &vtx, const float x0, const float x1, c
 void buildCylStrip(std::vector<glm::vec3> &vtx, const float x0, const float x1, const float radius, const int slices);
 void buildCapFan(std::vector<glm::vec3> &coneVtx, const float x0, const float radius, const int slices);
 #else
-void buildCone(std::vector<glm::vec3> &vtx, const float x0, const float x1, const float radius, const int slices);
-void buildCyl (std::vector<glm::vec3> &vtx, const float x0, const float x1, const float radius, const int slices);
-void buildCap (std::vector<glm::vec3> &vtx, const float x0, const float x1, const float radius, const int slices);
+void buildCone(std::vector<vec3> &vtx, const float x0, const float x1, const float radius, const int slices);
+void buildCyl (std::vector<vec3> &vtx, const float x0, const float x1, const float radius, const int slices);
+void buildCap (std::vector<vec3> &vtx, const float x0, const float x1, const float radius, const int slices);
 #endif
-void buildCube(std::vector<glm::vec3> &vtx, const float size);
+void buildCube(std::vector<vec3> &vtx, const float size);
 
 
 template <class T> class vaoAxesClass {
@@ -116,7 +113,7 @@ public:
         transforms = new transformsClass;
 
         transforms->setView(vec3(0.f, 0.f, 5.0f), vec3(0.f, 0.f, .0f)); 
-        transforms->setPerspective(30.f, theApp->GetHeight() != 0 ? float(theApp->GetWidth())/float(theApp->GetHeight()) : 1.0, 0.f, 30.f);
+        transforms->setPerspective(30.f, theApp->GetHeight() != 0 ? float(theApp->GetWidth())/float(theApp->GetHeight()) : 1.f, 0.f, 30.f);
 
         startArrow = showCube ? cubeSize : cylRadius;
 
@@ -174,7 +171,7 @@ public:
 
     transformsClass *getTransforms() { return transforms; }
 
-    void setBackgroundColor(const glm::vec4 &bg) { bgColor = bg; }
+    void setBackgroundColor(const vec4 &bg) { bgColor = bg; }
 
     vec3 &getZoom() { return axesZoom; }
     void setZoom(vec3 v) { axesZoom = v; }
@@ -198,7 +195,7 @@ private:
     GLuint _pMat, _mvMat, _zoomF;
     bool showFullAxes = true, showCube = false;
 
-    glm::vec4 bgColor = glm::vec4(0.0f);
+    vec4 bgColor = vec4(0.0f);
  
     vec3 axesZoom = vec3(1.f);
     vec3 zoomFactor = vec3(1.f);
@@ -208,7 +205,7 @@ private:
     std::vector<glm::vec3> coneVtx, capVtx, cylVtx, cubeVtx;
 #else
     vaoAxesClass<float> *vaoAxes = nullptr;
-    std::vector<glm::vec3> allAxes;
+    std::vector<vec3> allAxes;
 #endif
 
 

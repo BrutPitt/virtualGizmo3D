@@ -14,15 +14,10 @@
 //  This software is distributed under the terms of the BSD 2-Clause license
 //  
 ////////////////////////////////////////////////////////////////////////////////
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "oglAxes.h"
 
 #include "../glApp.h"
 #include "../glWindow.h"
-
-using namespace glm;
 
 
 #define SHADER_PATH "Shaders/"
@@ -129,7 +124,7 @@ void buildCylStrip(std::vector<glm::vec3> &cylVtx, const float z0, const float z
 //  Cone
 //
 ////////////////////////////////////////////////////////////////////////////
-void buildCone(std::vector<glm::vec3> &coneVtx, const float z0, const float z1, const float radius, const int slices)
+void buildCone(std::vector<vec3> &coneVtx, const float z0, const float z1, const float radius, const int slices)
 {
     const float height = z1-z0 ;
 
@@ -140,7 +135,7 @@ void buildCone(std::vector<glm::vec3> &coneVtx, const float z0, const float z1, 
     const float sinn =  radius / sq;
 
 
-    const float incAngle = 2*glm::pi<float>()/(float)( slices );
+    const float incAngle = 2*T_PI/(float)( slices );
     float angle = incAngle;
 
     float xt1 = sinn,  x1 = radius;// cos(0) * sinn ... cos(0) * radius 
@@ -148,7 +143,7 @@ void buildCone(std::vector<glm::vec3> &coneVtx, const float z0, const float z1, 
 
     const float zt0 = z0 * cosn, zt1 = z1 * cosn; 
 
-#   define V(x,y,z) coneVtx.push_back(glm::vec3(x, y, z))
+#   define V(x,y,z) coneVtx.push_back(vec3(x, y, z))
 #   define N(x,y,z) V(x,y,z)
 
     for (int j=0; j<slices; j++, angle+=incAngle)
@@ -177,18 +172,18 @@ void buildCone(std::vector<glm::vec3> &coneVtx, const float z0, const float z1, 
 //  Cylinder
 //      Draw w/o up/dw caps
 ////////////////////////////////////////////////////////////////////////////
-void buildCyl(std::vector<glm::vec3> &cylVtx, const float z0, const float z1, const float radius, const int slices)
+void buildCyl(std::vector<vec3> &cylVtx, const float z0, const float z1, const float radius, const int slices)
 {
 
     float x1 = 1.0f, xr1 = radius;
     float y1 = 0.0f, yr1 = 0.0f; // * radius
 
     
-    const float incAngle = 2.0f*glm::pi<float>()/(float)( slices );
+    const float incAngle = 2.0f*T_PI/(float)( slices );
     float angle = incAngle;
 
 
-#   define V(x,y,z) cylVtx.push_back(glm::vec3(x, y, z))
+#   define V(x,y,z) cylVtx.push_back(vec3(x, y, z))
 #   define N(x,y,z) V(x,y,z)
 
 
@@ -226,18 +221,18 @@ void buildCyl(std::vector<glm::vec3> &cylVtx, const float z0, const float z1, co
 //  Cap (circle)
 //      for full axes need only one Cap
 ////////////////////////////////////////////////////////////////////////////
-void buildCap(std::vector<glm::vec3> &vtx, const float z0, const float z1, const float radius, const int slices)
+void buildCap(std::vector<vec3> &vtx, const float z0, const float z1, const float radius, const int slices)
 {
 
     float x1 = 1.0f, xr1 = radius;
     float y1 = 0.0f, yr1 = 0.0f; // * radius
 
     
-    const float incAngle = 2.0f*glm::pi<float>()/(float)( slices );
+    const float incAngle = 2.0f*T_PI/(float)( slices );
     float angle = incAngle;
 
 
-#   define V(x,y,z) vtx.push_back(glm::vec3(x, y, z))
+#   define V(x,y,z) vtx.push_back(vec3(x, y, z))
 #   define N(x,y,z) V(x,y,z)
 
     for (int j=0; j<slices; j++, angle+=incAngle) {
@@ -267,10 +262,10 @@ void buildCap(std::vector<glm::vec3> &vtx, const float z0, const float z1, const
 //  Cube
 //      Draw only 2 squared opposed faces, and then instance them
 ////////////////////////////////////////////////////////////////////////////
-void buildCube(std::vector<glm::vec3> &cubeVtx, const float size)
+void buildCube(std::vector<vec3> &cubeVtx, const float size)
 {
-#define V(x,y,z) cubeVtx.push_back(glm::vec3(x size, y size, z size))
-#define N(x,y,z) cubeVtx.push_back(glm::vec3(x, y, z))
+#define V(x,y,z) cubeVtx.push_back(vec3(x size, y size, z size))
+#define N(x,y,z) cubeVtx.push_back(vec3(x, y, z))
 
     V(+,+,+); N( 0.0, 0.0, 1.0); V(-,-,+); N( 0.0, 0.0, 1.0); V(-,+,+); N( 0.0, 0.0, 1.0); 
     V(+,-,+); N( 0.0, 0.0, 1.0); V(-,-,+); N( 0.0, 0.0, 1.0); V(+,+,+); N( 0.0, 0.0, 1.0); 
@@ -296,6 +291,8 @@ void oglAxes::initShaders(const char *vtxDefs,  const char *fragDefs)
     addFragment();
 
 	link();
+
+    removeAllShaders();
 
     bindPipeline();
 
@@ -324,7 +321,7 @@ void oglAxes::render()
     GLfloat f=1.0f;
     glClearBufferfv(GL_DEPTH, 0, &f);    
 
-    glClearBufferfv(GL_COLOR, 0, glm::value_ptr(bgColor));    
+    glClearBufferfv(GL_COLOR, 0, value_ptr(bgColor));    
 
 
 
@@ -333,8 +330,8 @@ void oglAxes::render()
 
     getTransforms()->updatePmatrix(_pMat );
     getTransforms()->updateMVmatrix(_mvMat);
-    glm::vec3 zoom(axesZoom*zoomFactor);
-    glUniform3fv(_zoomF, 1, glm::value_ptr(zoom));
+    vec3 zoom(axesZoom*zoomFactor);
+    glUniform3fv(_zoomF, 1, value_ptr(zoom));
         
     //glFrontFace(GL_CCW); 
 #ifdef GLAPP_MINIMIZE_VERTEX

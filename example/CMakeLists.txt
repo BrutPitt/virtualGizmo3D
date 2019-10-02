@@ -19,7 +19,6 @@ set(SOURCE_FILES
         ${SRC}/tools/vGizmoMath.h
         ${SRC}/tools/vGizmoConfig.h
         ${SRC}/tools/vGizmo.h
-        ${SRC}/tools/vGizmo.h
         ${SRC}/tools/transforms.h        
         ${SRC}/tools/oglAxes.cpp
         ${SRC}/tools/oglAxes.h

@@ -13,7 +13,9 @@ It uses **quaternions** algebra, internally, to manage rotations, but you can al
 
 In this way you can use it with any engine, like: *OpenGL, DirectX, Vulkan, Metal, etc.* and/or  with any framework, like: *GLFW, SDL, GLUT, Native O.S. calls, etc.*
 
-You can use **vGizmoMath** also externally, for your purposes, both as ***simple* float classes** (*Default*) or as **template classes** for both `float` and `double` data types, or as alternative to it is also possible to interface **virtualGizmo3D** with [**glm** mathematics library](https://github.com/g-truc/glm) (*all by simply adding a* `#define`)
+You can use **vGizmoMath** also externally, for your purposes, both as *simple* single precision `float` **classes** (*Default*) or, enabling **template classes** (*simply adding a* `#define`), as both `float` and `double` data types. 
+
+As alternative to **vGizmoMath** is also possible to interface **virtualGizmo3D** with [**glm**](https://github.com/g-truc/glm) (*simply adding a* `#define`)
 
 ==>&nbsp; **Please, read [**Configure virtualGizmo3D**](#Configure-virtualGizmo3D) section.*
 

@@ -15,7 +15,7 @@ In this way you can use it with any engine, like: *OpenGL, DirectX, Vulkan, Meta
 
 You can use **vGizmoMath** also externally, for your purposes, both as ***simple* float classes** (*Default*) or as **template classes** for both `float` and `double` data types, or as alternative to it is also possible to interface **virtualGizmo3D** with [**glm** mathematics library](https://github.com/g-truc/glm) (*all by simply adding a* `#define`)
 
-==>&nbsp; **Please, read [**Configure virtualGizmo3D**](#Configure-virtualGizmo3D-\(vGizmoConfig.h\)) section.*
+==>&nbsp; **Please, read [**Configure virtualGizmo3D**](#Configure-virtualGizmo3D-==>-vGizmoConfig.h) section.*
 
 <p>&nbsp;<br></p>
 
@@ -195,7 +195,7 @@ Helper `typedef` are also defined:
 ```
 <p>&nbsp;<br></p>
 
-## Configure virtualGizmo3D (vGizmoConfig.h)
+## Configure virtualGizmo3D ==> vGizmoConfig.h
 **virtalGizmo3D** uses **vGizmoMath** tool, it contains a group of vector/matrices/quaternion classes, operators, and principal functions. It uses the "glsl" convention for types and function names so is compatible with **glm** types and function calls: **vGizmoMath** is a subset of [**glm** mathematics library](https://github.com/g-truc/glm) and so you can use one or the other via simple `#define`.
 
 It does not want replicate **glm**, is only intended to make **virtalGizmo3D** standalone, and avoid **template classes** use in the cases of low resources.

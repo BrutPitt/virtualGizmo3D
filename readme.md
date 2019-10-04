@@ -195,7 +195,7 @@ Helper `typedef` are also defined:
 ```
 <p>&nbsp;<br></p>
 
-## Configure virtualGizmo3D - vGizmoConfig.h
+## Configure virtualGizmo3D \- vGizmoConfig\.h
 **virtalGizmo3D** uses **vGizmoMath** tool, it contains a group of vector/matrices/quaternion classes, operators, and principal functions. It uses the "glsl" convention for types and function names so is compatible with **glm** types and function calls: **vGizmoMath** is a subset of [**glm** mathematics library](https://github.com/g-truc/glm) and so you can use one or the other via simple `#define`.
 
 It does not want replicate **glm**, is only intended to make **virtalGizmo3D** standalone, and avoid **template classes** use in the cases of low resources.

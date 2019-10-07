@@ -1,4 +1,4 @@
-# virtualGizmo3D &nbsp;2.0
+# virtualGizmo3D &nbsp;v2.01
 **virtualGizmo3D** is an 3D GIZMO manipulator: like a trackball it provides a way to rotate, move and scale a model, with mouse, also with dolly and pan features
 You can also define a way to rotate the model around any single axis.
 It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like *Shift/Ctrl/Alt/Super*, that you define
@@ -217,6 +217,8 @@ You can do this simply by commenting / uncommenting a line in `vGizmoConfig.h` o
 //      or for your purposes:
 //          float  ==>  vec2 /  vec3 /  vec4 /  quat /  mat3|mat3x3  /  mat4|mat4x4
 //          double ==> dvec2 / dvec3 / dvec4 / dquat / dmat3|dmat3x3 / dmat4|dmat4x4
+//          int    ==> ivec2 / ivec3 / ivec4
+//          uint   ==> uvec2 / uvec3 / uvec4
 // If you select TEMPLATE classes the widget too will use internally them 
 //      with single precision (float)
 //

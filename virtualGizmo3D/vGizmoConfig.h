@@ -31,7 +31,7 @@
 //
 // Default ==> NO template
 //------------------------------------------------------------------------------
-#define VGIZMO_USES_TEMPLATE
+//#define VGIZMO_USES_TEMPLATE
 
 // uncomment to use "glm" (0.9.9 or higher) library instead of vGizmoMath
 //      Need to have "glm" installed and in your INCLUDE research compiler path

@@ -214,8 +214,9 @@ You can do this simply by commenting / uncommenting a line in `vGizmoConfig.h` o
 // uncomment to use TEMPLATE internal vGizmoMath classes/types
 //
 // This is if you need to extend the use of different math types in your code
-//      or for your purposes:
+//      or for your purposes, there are predefined alias:
 //          float  ==>  vec2 /  vec3 /  vec4 /  quat /  mat3|mat3x3  /  mat4|mat4x4
+//      and more TEMPLATE (only!) alias:
 //          double ==> dvec2 / dvec3 / dvec4 / dquat / dmat3|dmat3x3 / dmat4|dmat4x4
 //          int    ==> ivec2 / ivec3 / ivec4
 //          uint   ==> uvec2 / uvec3 / uvec4
@@ -250,7 +251,9 @@ You can do this simply by commenting / uncommenting a line in `vGizmoConfig.h` o
 //------------------------------------------------------------------------------
 //#define VGIZMO_USES_LEFT_HAND_AXES
 ```
-**If your project is not limited from low resources, I recommend to use **glm***
+- *If your project grows you can upgrade/pass to **glm**, in any moment*
+- *My [**glChAoS.P**](https://github.com/BrutPitt/glChAoS.P) project can switch from internal **vGizmoMath** (`VGIZMO_USES_TEMPLATE`) to **glm** (`VGIZMO_USES_GLM`), and vice versa, only changing defines: you can examine it as example*
+
 <p>&nbsp;<br></p>
 
 ## Changes from v. 1.0

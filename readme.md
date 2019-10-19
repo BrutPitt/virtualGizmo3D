@@ -139,7 +139,7 @@ And finally, in your render function (or where you prefer) you can get the trans
 ```cpp
 void onRender() //or when you prefer
 {
-    glm::mat4 model(1.0f);                          // Identity matrix
+    mat4 model(1.0f);                          // Identity matrix
 
     // virtualGizmo transformations
     getGizmo().applyTransform(model);           // apply transform to matrix model

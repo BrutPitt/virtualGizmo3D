@@ -237,7 +237,6 @@ You can do this simply by commenting / uncommenting a line in `vGizmoConfig.h` o
 //
 // Default ==> use vGizmoMath
 //      If you enable GLM use, automatically is enabled also VGIZMO_USES_TEMPLATE
-//          if you can, I recommend to use GLM
 //------------------------------------------------------------------------------
 //#define VGIZMO_USES_GLM
 ```

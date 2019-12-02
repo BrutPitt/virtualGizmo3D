@@ -3,17 +3,17 @@
 You can also define a way to rotate the model around any single axis.
 It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like *Shift/Ctrl/Alt/Super*, that you define
 
-It uses **quaternions** algebra, internally, to manage rotations, but you can also only pass your model matrix and gat back a transormation matrix with rotation, translazion and scale, inside.
+It uses **quaternions** algebra, internally, to manage rotations, but you can also only pass your model matrix and gat back a transformation matrix with rotation, translation and scale, inside.
 
 ![alt text](https://raw.githubusercontent.com/BrutPitt/virtualGizmo3D/master/screenshots/oglGizmo.gif)
 
-**virtualGizmo3D** is an *header only* tool (`vGizmo.h`) and **is not bound to frameworks or render engines**, is written in C++ (C++11) and uses `vgMath.h` a small vectors/matrices/quaternions tool (for internal math operations) that makes **virtualGizmo3D** standalone.
+**virtualGizmo3D** is an *header only* tool (`vGizmo.h`) and **is not bound to frameworks or render engines**, is written in C++ (C++11) and uses [**vgMath**](https://github.com/BrutPitt/vgMath) a compact (my *single file header only*) vectors/matrices/quaternions tool/lib that makes **virtualGizmo3D** standalone.
 
 **No other files or external libraries are required**
 
 In this way you can use it with any engine, like: *OpenGL, DirectX, Vulkan, Metal, etc.* and/or  with any framework, like: *GLFW, SDL, GLUT, Native O.S. calls, etc.*
 
-You can use **vgMath** also externally, for your purposes: it contains classes to manipulate **vec**tors (with 2/3/4 components), **quat**ernions, square **mat**ricies (3x3 and 4x4), both as *simple* single precision `float` **classes** (*Default*) or, enabling **template classes** (*simply adding a* `#define`), as both `float` and `double` data types. It contains also 4 helper functions to define Model/View matrix: **perspective**, **frustrum**, **lookAt**, **ortho**
+You can use [**vgMath**](https://github.com/BrutPitt/vgMath) also externally, for your purposes: it contains classes to manipulate **vec**tors (with 2/3/4 components), **quat**ernions, square **mat**ricies (3x3 and 4x4), both as *simple* single precision `float` **classes** (*Default*) or, enabling **template classes** (*simply adding a* `#define`), as both `float` and `double` data types. It contains also 4 helper functions to define Model/View matrix: **perspective**, **frustum**, **lookAt**, **ortho**
 
 If need a larger/complete library, as alternative to **virtualGizmo3D**, is also possible to interface **imGuIZMO.quat** with [**glm** mathematics library](https://github.com/g-truc/glm) (*simply adding a* `#define`)
 
@@ -41,7 +41,7 @@ vGizmo3D gizmo;
 vGizmo3D &getGizmo() { return gizmo; }  //optional helper
 ```
 
-In your 3D engine *initalization* declare (overriding default ones) your preferred controls:
+In your 3D engine *initialization* declare (overriding default ones) your preferred controls:
 
 **GLFW buttons/keys initialization**
 
@@ -199,16 +199,16 @@ Helper `typedef` are also defined:
 <p>&nbsp;<br></p>
 
 ## Configure virtualGizmo3D
-**virtalGizmo3D** uses **vgMath** tool, it contains a group of vector/matrices/quaternion classes, operators, and principal functions. It uses the "glsl" convention for types and function names so is compatible with **glm** types and function calls: **vgMath** is a subset of [**glm** mathematics library](https://github.com/g-truc/glm) and so you can use first or upgrade to second via a simple `#define`. However **vgMath** does not want replicate **glm**, is only intended to make **virtalGizmo3D** standalone, and avoid **template classes** use in the cases of low resources or embedded systems.
+**virtalGizmo3D** uses [**vgMath**](https://github.com/BrutPitt/vgMath) tool, it contains a group of vector/matrices/quaternion classes, operators, and principal functions. It uses the "glsl" convention for types and function names so is compatible with **glm** types and function calls: [**vgMath**](https://github.com/BrutPitt/vgMath) is a subset of [**glm** mathematics library](https://github.com/g-truc/glm) and so you can use first or upgrade to second via a simple `#define`. However **vgMath** does not want replicate **glm**, is only intended to make **virtalGizmo3D** standalone, and avoid **template classes** use in the cases of low resources or embedded systems.
 
 
 The file `vgConfig.h` allows to configure internal math used form **virtalGizmo3D**. In particular is possible select between:
- - static **float** classes (*Default*) / temlpate classes 
+ - static **float** classes (*Default*) / template classes 
  - internal **vgMath** tool (*Default*) / **glm** mathematics library
- - **Right** (*Default*) / **Left** handed coordinate system (*lookAt, perspective, ortho, frustrum - functions*)
- - Add additional HLSL types name convention
- - **enable** (*Default*) / **disable** the automatic entry of `using namespace vgm;` at end of `vgMath.h` (it influences only your external use of `vgMath.h`)
-
+ - **Right** (*Default*) / **Left** handed coordinate system (*lookAt, perspective, ortho, frustum - functions*)
+ - **enable** (*Default*) / **disable** automatic entry of `using namespace vgm;` at end of `vgMath.h` (it influences only your external use of `vgMath.h`)
+- Add additional HLSL types name convention
+ 
 You can do this simply by commenting / uncommenting a line in `vgConfig.h` or adding related "define" to your project, as you can see below:
 
 ```cpp
@@ -300,7 +300,7 @@ To use SDL framework instead of GLFW, uncomment `#define GLAPP_USE_SDL` in `glAp
 To build it you can use CMake (3.10 or higher) or the Visual Studio solution project (for VS 2017) in Windows.
 You need to have [**GLFW**](https://www.glfw.org/) (or [**SDL**](https://libsdl.org/)) in your compiler search path (LIB/INCLUDE). Instead copy of [**glm**](https://github.com/g-truc/glm) is attached and included in the example.
 
-The CMake file is able to build also an [**EMSCRIPTEN**](https://kripken.github.io/emscripten-site/index.html) version, obviously you need to have installed EMSCRIPTEN SDK on your computer (1.38.10 or higher): look at or use the helper batch/script files, in main example folder, to pass appropriate defines/patameters to CMake command line.
+The CMake file is able to build also an [**EMSCRIPTEN**](https://kripken.github.io/emscripten-site/index.html) version, obviously you need to have installed EMSCRIPTEN SDK on your computer (1.38.10 or higher): look at or use the helper batch/script files, in main example folder, to pass appropriate defines/parameters to CMake command line.
 
 To build the EMSCRIPTEN version, in Windows, with CMake, need to have **mingw32-make.exe** in your computer and search PATH (only the make utility is enough): it is a condition of EMSDK tool to build with CMake.
 

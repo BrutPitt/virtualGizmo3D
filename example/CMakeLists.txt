@@ -16,8 +16,8 @@ set(SOURCE_FILES
         ${SRC}/tools/glslShaderObject.cpp
         ${SRC}/tools/glslProgramObject.h
         ${SRC}/tools/glslShaderObject.h    
-        ${SRC}/tools/vGizmoMath.h
-        ${SRC}/tools/vGizmoConfig.h
+        ${SRC}/tools/vgMath.h
+        ${SRC}/tools/vgConfig.h
         ${SRC}/tools/vGizmo.h
         ${SRC}/tools/transforms.h        
         ${SRC}/tools/oglAxes.cpp

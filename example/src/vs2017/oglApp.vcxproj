@@ -324,9 +324,10 @@
     <ClInclude Include="..\tools\glslShaderObject.h" />
     <ClInclude Include="..\tools\oglAxes.h" />
     <ClInclude Include="..\tools\transforms.h" />
+    <ClInclude Include="..\tools\vgConfig.h" />
     <ClInclude Include="..\tools\vGizmo.h" />
-    <ClInclude Include="..\tools\vGizmoConfig.h" />
     <ClInclude Include="..\tools\vGizmoMath.h" />
+    <ClInclude Include="..\tools\vgMath.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Shaders\oglAxesFrag.glsl" />

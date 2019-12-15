@@ -71,10 +71,13 @@
     <ClInclude Include="..\tools\vGizmo.h">
       <Filter>tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\tools\vGizmoConfig.h">
+    <ClInclude Include="..\tools\vGizmoMath.h">
       <Filter>tools</Filter>
     </ClInclude>
-    <ClInclude Include="..\tools\vGizmoMath.h">
+    <ClInclude Include="..\tools\vgConfig.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tools\vgMath.h">
       <Filter>tools</Filter>
     </ClInclude>
   </ItemGroup>

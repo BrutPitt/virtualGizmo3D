@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-//  Copyright (c) 2018-2019 Michele Morrone
+//  Copyright (c) 2018-2020 Michele Morrone
 //  All rights reserved.
 //
 //  https://michelemorrone.eu - https://BrutPitt.com
@@ -117,7 +117,7 @@ public:
 
     void setModelMatrix(const mat4& m) { tM.mMatrix = m; }
     void setViewMatrix (const mat4& m) { tM.vMatrix = m; }
-    void setProjMatrix (const mat4& m) { tM.pMatrix = m; tM.invP = inverse(m); }
+    void setProjMatrix (const mat4& m) { tM.pMatrix = m; }
 
     mat4& getModelMatrix() { return tM.mMatrix; }
     mat4& getViewMatrix () { return tM.vMatrix; }

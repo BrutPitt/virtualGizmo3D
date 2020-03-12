@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
+
+set(BUILD_EMSCRIPTEN FALSE CACHE BOOL FALSE)
+set(USE_SDL FALSE CACHE BOOL FALSE)
+
+set(CMAKE_CXX_STANDARD 11)
+
 project(oglGizmo)
-
-set(CMAKE_CXX_STANDARD 14)
-
-find_package(OpenGL REQUIRED)
 
 
 # relative source directory
@@ -38,7 +40,7 @@ include_directories(${SRC}/tools)
 set(M_GLOBAL_FLAGS "-D_USE_GLFW_ -DGLM_ENABLE_EXPERIMENTAL -fpermissive")
 
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+if (${BUILD_EMSCRIPTEN})
 #    set(CMAKE_C_COMPILER "emcc")
 #    set(CMAKE_CXX_COMPILER "emcc")
 
@@ -92,18 +94,11 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 
 #    set_target_properties(${PROJECT_NAME}  PROPERTIES LINK_FLAGS "${M_EMCC_OPTIONS}")
 else()
-if(APPLE)
-    include_directories(src/libs/glfw/buildOSX/include)
-    link_directories(src/libs/glfw/buildOSX/lib)
-else()
-    if(WIN32)
-        include_directories(src/libs/glfw/buildWin/include)
-        link_directories(src/libs/glfw/buildWin/lib)
-    else()
-        include_directories(src/libs/glfw/buildLinux/include)
-        link_directories(src/libs/glfw/buildLinux/lib)
-    endif(WIN32)
-endif(APPLE)
+    find_package(OpenGL REQUIRED)
+
+    if(USE_SDL)
+        set(M_GLOBAL_FLAGS "${M_GLOBAL_FLAGS} -DGLAPP_USE_SDL")
+    endif(USE_SDL)    
 
     set(M_CXX_FLAGS "-DAPP_REQUIRE_OGL45")
 
@@ -114,5 +109,24 @@ endif(APPLE)
 
     add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${SRC}/libs/glad/glad.cpp)
 
-    target_link_libraries(${PROJECT_NAME} ${OPENGL_gl_LIBRARY} glfw dl)
+    if(WIN32)
+        set(TARGET_LIBS "")
+    else()
+        set(TARGET_LIBS ${CMAKE_DL_LIBS})
+    endif()
+
+
+    if(USE_SDL)
+        find_package(SDL2 REQUIRED)
+        include_directories(${SDL2_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} ${OPENGL_gl_LIBRARY} ${SDL2_LIBRARIES} ${TARGET_LIBS})
+    else()
+        if(WIN32)
+            find_package(glfw3 REQUIRED)
+        else()    
+            #find_package(glfw3 REQUIRED)
+        endif()
+        target_link_libraries(${PROJECT_NAME} ${OPENGL_gl_LIBRARY} ${TARGET_LIBS} glfw)
+    endif()
+
 endif ()

@@ -1,4 +1,4 @@
-# virtualGizmo3D &nbsp;v2.1
+# virtualGizmo3D &nbsp;v2.1.3
 **virtualGizmo3D** is an 3D GIZMO manipulator: like a trackball it provides a way to rotate, move and scale a model, with mouse, also with dolly and pan features
 You can also define a way to rotate the model around any single axis.
 It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like *Shift/Ctrl/Alt/Super*, that you define
@@ -296,9 +296,10 @@ The source code example shown in the animated gif screenshot, is provided.
 In  example I use **GLFW** or **SDL2** (via `#define GLAPP_USE_SDL`) with **OpenGL**, but it is simple to change if you use Vulkan/DirectX/etc, other frameworks (like GLUT) or native OS access.
 
 To use SDL framework instead of GLFW, uncomment `#define GLAPP_USE_SDL` in `glApp.h` file, or pass `-DGLAPP_USE_SDL` directly to compiler.
+**CMake** users can pass command line `-DUSE_SDL:BOOL=TRUE` (or use relative GUI flag) to enable **SDL** framework instead of **GLFW**.
 
 To build it you can use CMake (3.10 or higher) or the Visual Studio solution project (for VS 2017) in Windows.
-You need to have [**GLFW**](https://www.glfw.org/) (or [**SDL**](https://libsdl.org/)) in your compiler search path (LIB/INCLUDE). Instead copy of [**glm**](https://github.com/g-truc/glm) is attached and included in the example.
+You need to have [**GLFW**](https://www.glfw.org/) (or [**SDL**](https://libsdl.org/)) in your compiler search path (LIB/INCLUDE).
 
 The CMake file is able to build also an [**EMSCRIPTEN**](https://kripken.github.io/emscripten-site/index.html) version, obviously you need to have installed EMSCRIPTEN SDK on your computer (1.38.10 or higher): look at or use the helper batch/script files, in main example folder, to pass appropriate defines/parameters to CMake command line.
 

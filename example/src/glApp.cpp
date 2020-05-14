@@ -159,7 +159,9 @@ static void glfwCharCallback(GLFWwindow* window, unsigned int c)
 
 void glfwScrollCallback(GLFWwindow* window, double x, double y)
 {
+    theWnd->onMouseWheel(0, 0, int(x), int(y));
 }
+
 
 
 static void glfwMousePosCallback(GLFWwindow* window, double x, double y)

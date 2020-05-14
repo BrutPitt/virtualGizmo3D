@@ -17,20 +17,21 @@
 
 
 // Global variable or member class
-vg::vGizmo3D gizmo; 
-vg::vGizmo3D &getGizmo() { return gizmo; }
+//vg::vGizmo3D gizmo; 
+//vg::vGizmo3D &getGizmo() { return gizmo; } 
 
+// Like above, now I use vGizmo3D declared inside axes class: is same thing
+#define getGizmo() axes->getGizmo()
 
-glWindow::glWindow() 
-{   
+/////////////////////////////////////////////////
+glWindow::glWindow() {}
 
-}
+/////////////////////////////////////////////////
+glWindow::~glWindow() {}
 
-
-glWindow::~glWindow()
-{
-
-}
+// Exit OGL
+/////////////////////////////////////////////////
+void glWindow::onExit() { delete axes; }
 
 // Init OGL app
 /////////////////////////////////////////////////
@@ -51,8 +52,6 @@ void glWindow::onInit()
     axes = new oglAxes(true);
     axes->setBackgroundColor(vec4(.25f));
     axes->initShaders(vtxDefs, fragDefs); 
-
-
 
     glViewport(0,0,theApp->GetWidth(), theApp->GetHeight());
 
@@ -86,35 +85,18 @@ void glWindow::onInit()
     // If you need to more feeling with the mouse use:
     // getGizmo().setGizmoFeeling(1.0);
     // 1.0 default,  > 1.0 more sensible, < 1.0 less sensible
-    
 
     // other settings if you need it
     /////////////////////////////////////////////
 
-
     //getGizmo().setDollyScale(1.0f);
     //getGizmo().setDollyPosition(5.0f);
     //getGizmo().setRotationCenter(vec3(0.0));
-
-
 }
 
-
-
-//
-/////////////////////////////////////////////////
-void glWindow::onExit()
-{
-    delete axes;
-   
-}
-
-//
 /////////////////////////////////////////////////
 void glWindow::onRender()
 {
-    
-    
     mat4 m(1.0f);                          // Identity matrix
 
     // virtualGizmo transformations
@@ -130,9 +112,6 @@ void glWindow::onRender()
 
 }
 
-
-
-//
 /////////////////////////////////////////////////
 void glWindow::onIdle()
 {
@@ -141,8 +120,6 @@ void glWindow::onIdle()
     getGizmo().idle();
 }
 
-
-//
 /////////////////////////////////////////////////
 void glWindow::onReshape(GLint w, GLint h)
 {
@@ -156,49 +133,9 @@ void glWindow::onReshape(GLint w, GLint h)
 
 }
 
-//
-/////////////////////////////////////////////////
-void glWindow::onKeyUp(unsigned char key, int x, int y)
-{
-
-}
-
-
-//
-/////////////////////////////////////////////////
-void glWindow::onSpecialKeyDown(int key, int x, int y)
-{
-
-
-}
-
-
-//
-/////////////////////////////////////////////////
-void glWindow::onKeyDown(unsigned char key, int x, int y)
-{
-
-
-
-}
-
-
-
-//
-/////////////////////////////////////////////////
-void glWindow::onSpecialKeyUp(int key, int x, int y)
-{
-
-
-
-}
-
-
-//
 /////////////////////////////////////////////////
 void glWindow::onMouseButton(int button, int upOrDown, int x, int y)
 {
-
     //  Call on mouse button event
     //      button:  your mouse button
     //      mod:     your modifier key -> CTRL, SHIFT, ALT, SUPER
@@ -211,27 +148,40 @@ void glWindow::onMouseButton(int button, int upOrDown, int x, int y)
 #else
                     upOrDown==GLFW_PRESS, x, y);
 #endif
-
 }
 
-//
 /////////////////////////////////////////////////
 void glWindow::onMouseWheel(int wheel, int direction, int x, int y)
 {
-
+    const float z = axes->getTransforms()->getOverallDistance() * // get combined distance:
+                    getGizmo().getDistScale();
+    getGizmo().wheel(x, y, z);  // zoom speed increments by distance, use z*z to exponential factor
+    //getGizmo().wheel(x, y);     // linear zoom speed
 }
 
-//
 /////////////////////////////////////////////////
 void glWindow::onMotion(int x, int y)
 {
     //  Call on motion event to communicate the position
-    getGizmo().motion(x, y);
+    const float z = axes->getTransforms()->getOverallDistance() * // get combined distance: PoV  + Dolly
+                    getGizmo().getDistScale();
+    getGizmo().motion(x, y, z);   // pan/zoom speed increment by distance, use z*z to exponential factor
+    //getGizmo().motion(x, y);    // linear pan/zoom speed
 }
 
-//
 /////////////////////////////////////////////////
-void glWindow::onPassiveMotion(int x, int y)
-{
+void glWindow::onKeyUp(unsigned char key, int x, int y) {}
 
-}
+/////////////////////////////////////////////////
+void glWindow::onSpecialKeyDown(int key, int x, int y) {}
+
+/////////////////////////////////////////////////
+void glWindow::onKeyDown(unsigned char key, int x, int y) {}
+
+/////////////////////////////////////////////////
+void glWindow::onSpecialKeyUp(int key, int x, int y) {}
+
+/////////////////////////////////////////////////
+void glWindow::onPassiveMotion(int x, int y) {}
+
+

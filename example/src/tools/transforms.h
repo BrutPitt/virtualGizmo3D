@@ -147,6 +147,8 @@ public:
                              vec3(0.0f, 1.0f, 0.0f));
     }
 
+    float getOverallDistance() { return getPOV().z - getTrackball().getDollyPosition().z; }
+
 #define MIN_NEAR .01f //(_far*.01f)
     void setPerspective(float angle, float aspect, float _near, float _far) {        
         pAngle = angle; pAspect = aspect; pNear = _near <= MIN_NEAR ? MIN_NEAR : _near; pFar = _near>_far ? _near : _far;
@@ -200,10 +202,8 @@ private:
     GLuint blockIndex;
     GLuint uBlockSize;    
     GLuint uBuffer;
-    GLbyte* ptrBuff;
     enum bind { bindIdx=4 };
     enum loc { pMat = 3, mvMat = 4, mvpMat = 5 };
-    GLint minSize;
 #undef SZ
 #undef PTR
 };

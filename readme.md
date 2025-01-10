@@ -20,7 +20,6 @@ If need a larger/complete library, as alternative to **virtualGizmo3D**, is also
 
 ==>&nbsp; **Please, read [**Configure virtualGizmo3D**](#Configure-virtualGizmo3D) section.*
 
-<p>&nbsp;<br></p>
 
 
 ### Live WebGL2 example
@@ -29,12 +28,16 @@ You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from follow
 
 It works only on browsers with **WebGl2** and *webAssembly* support (FireFox/Opera/Chrome and Chromium based): test if your browser supports **WebGL2**, here: [WebGL2 Report](http://webglreport.com/?v=2)
 
-### How to use virtualGizmo3D in your code
+<p>&nbsp;<br></p>
 
-To use **virtualGizmo3D** need to include `vGizmo3D.h` or `vGizmo.h` file in your code and declare an object of type `vGizmo3D`, global, static or as member of class
+## How to use virtualGizmo3D in your code
+
+*The following code is taken from the new [easy_examples](https://github.com/BrutPitt/virtualGizmo3D/tree/master/easy_examples)*
+
+To use **vGizmo3D** need to include `vGizmo3D.h` or `vGizmo.h` file in your code and declare an object of type `vGizmo3D`, global, static or as member of class
 
 
-## Univocal / framework-independent initialization
+## Univocal initialization / framework-independent 
 
 ```cpp                       
 #include <vGizmo3D.h> // or "vGizmo3D/vGizmo3D.h" ... or where it is 
@@ -76,10 +79,10 @@ void initVGizmo3D()     // Settings to control vGizmo3D
 
 
 
-Now you need to control some *event* funtions:
+Now is necessary to control some *event* funtions:
 
 ## SDL environment
-Intercept Key Modifier state and return appropriate `vg::enum`
+Get Key-Modifier state and return appropriate `vg::enum`
 ```cpp
 /// vGizmo3D: Check key modifier currently pressed (GLFW version)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,7 +127,7 @@ In main rendering loop intercept mouse button pression/release:
 ```
 
 ## GLFW environment
-Intercept Key Modifier state and return appropriate `vg::enum`
+Get Key-Modifier state and return appropriate `vg::enum`
 ```cpp
 int getModifier(GLFWwindow* window) {
     if((glfwGetKey(window,GLFW_KEY_LEFT_CONTROL)    == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS))
@@ -167,7 +170,8 @@ In main rendering loop intercept mouse button pression/release:
                         // It can be stopped by click on screen (without mouse movement)
 ```   
 
-With GLFW mouse callbacks (in alternative)
+### GLFW Callbacks
+Using GLFW mouse callbacks (in alternative)
 ```cpp
 static void glfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -222,10 +226,10 @@ And finally, before the function *draw*, transfer the rotations to build MVP mat
         mvpMatrix   = projMatrix * viewMatrix * compensateView * translationMatrix * modelMatrix;
         lightMatrix = projMatrix * viewMatrix * compensateView * translationMatrix * (static_cast<mat4>(track.getSecondRot())) /* secondary quat rotation */ * lightObj /* lightModelMatrix */; 
 ```
+*The whole code is taken from the new [easy_examples](https://github.com/BrutPitt/virtualGizmo3D/tree/master/easy_examples)*
 
 <p>&nbsp;<br></p>
 
- 
 ### Other useful setting stuff 
 
 ```cpp
@@ -294,7 +298,7 @@ endif()
 
 <p>&nbsp;<br></p>
 
-## Building Example - *Still to be updated to version 3.1*
+## Building Example - *Still must be updated to version 3.1*
 
 The source code example shown in the animated gif screenshot, is provided.
 

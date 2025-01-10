@@ -1,5 +1,5 @@
-# virtualGizmo3D &nbsp;v2.1.3
-**virtualGizmo3D** is an 3D GIZMO manipulator: like a trackball it provides a way to rotate, move and scale a model, with mouse, also with dolly and pan features
+# vGizmo3D / virtualGizmo3D &nbsp;v3.1 beta
+**vGizmo3D** / **virtualGizmo3D** is an 3D GIZMO manipulator: like a trackball it provides a way to rotate, move and scale a model, with mouse, also with dolly and pan features
 You can also define a way to rotate the model around any single axis.
 It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like *Shift/Ctrl/Alt/Super*, that you define
 
@@ -7,7 +7,8 @@ It uses **quaternions** algebra, internally, to manage rotations, but you can al
 
 ![alt text](https://raw.githubusercontent.com/BrutPitt/virtualGizmo3D/master/screenshots/oglGizmo.gif)
 
-**virtualGizmo3D** is an *header only* tool (`vGizmo.h`) and **is not bound to frameworks or render engines**, is written in C++ (C++11) and uses [**vgMath**](https://github.com/BrutPitt/vgMath) a compact (my *single file header only*) vectors/matrices/quaternions tool/lib that makes **virtualGizmo3D** standalone.
+**vGizmo3D** / **virtualGizmo3D** is an *header only* tool (`vGizmo3D.h`) and **is not bound to frameworks or render engines**, is written in C++ (C++17) and uses [**vgMath**](https://github.com/BrutPitt/vgMath) a compact (my *single file header only*) vectors/matrices/quaternions tool/lib that makes **virtualGizmo3D** standalone.
+**Alternatively you can use [**glm**](https://github.com/g-truc/glm) with a simple define: read [about glm and vgMath](#about-glm-and-vgmath)*
 
 **No other files or external libraries are required**
 
@@ -275,16 +276,16 @@ You can do this simply by commenting / uncommenting a line in `vgConfig.h` or ad
 <p>&nbsp;<br></p>
 
 #### About glm and vgMath:
-- *If your project grows you can upgrade/pass to **glm**, in any moment*
+- *If your project grows you can switch to **glm**, in any moment: [how to switch to glm](https://github.com/BrutPitt/virtualGizmo3D/blob/ec31006140293886aa373c0eaa736254c33e1a9f/vGizmo3D/vgConfig.h#L60-L73)*
 - *My [**glChAoS.P**](https://github.com/BrutPitt/glChAoS.P) project can switch from internal **vgMath** (`VGIZMO_USES_TEMPLATE`) to **glm** (`VGIZMO_USES_GLM`), and vice versa, only changing defines: you can examine it as example*
-- *Can use an optional CMake statement, like this:*
+- *Can also use an optional CMake statement, like this:*
 ```cmake                                                          
 #OFF: use vgMath, ON: force GLM anyway
 option(IMGUIZMO_USES_GLM "Use GLM instead of internal vgMath" OFF)
 
 find_package(glm CONFIG)  
 
-# if GLM package was found, then uses it (also if option = OFF)
+# if GLM package was found, then uses GLM (also if option = OFF)
 if(glm_FOUND OR IMGUIZMO_USES_GLM)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVGIZMO_USES_GLM")
 endif()

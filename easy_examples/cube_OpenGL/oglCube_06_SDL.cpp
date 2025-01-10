@@ -226,7 +226,6 @@ void initVGizmo3D()     // Settings to control vGizmo3D
         track.viewportSize(width, height);      // but if you need to more feeling with the mouse use:
     // track.setGizmoFeeling(1.0);              // 1.0 default,  > 1.0 more sensible, < 1.0 less sensible
 
-    // setIdleRotSpeed(1.0)                     // If used Idle() feature (continue rotation on Idle) it set that speed: more speed > 1.0 ,  less < 1.0
 
     // other settings if you need it
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -236,6 +235,7 @@ void initVGizmo3D()     // Settings to control vGizmo3D
     // track.setPanyPosition(/* your pos */);   // vec3 ==> only X and Y are acquired
     // track.setPosition(/* your pos */);       // input vec3 is equivalent to call: track.setDollyPosition(/* your pos */); and track.setPanyPosition(/* your pos */);
     // track.setRotationCenter(/* vec3 */);     // new rotation center
+    // track.setIdleRotSpeed(1.0)               // If used Idle() feature (continue rotation on Idle) it set that speed: more speed > 1.0 ,  less < 1.0
     //
     // Watch vGizmo.h for more functionalities
 }
@@ -285,22 +285,23 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
         glClearBufferfv(GL_COLOR, 0, value_ptr(bgColor));
 
 
-    // vGizmo3D: is necessary intercept mouse event not destined to ImGui
+    // vGizmo3D: check changing button state to activate/deactivate drag movements
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         static int leftPress = 0, rightPress = 0;
         int x, y;
         int mouseState = SDL_GetMouseState(&x, &y);
-        if(leftPress != (mouseState & SDL_BUTTON_LMASK)) {                                   // check if leftButton state is changed
-            leftPress = mouseState & SDL_BUTTON_LMASK ;                                    // set new (different!) state
+        if(leftPress != (mouseState & SDL_BUTTON_LMASK)) {              // check if leftButton state is changed
+            leftPress = mouseState & SDL_BUTTON_LMASK ;                 // set new (different!) state
             track.mouse(vg::evLeftButton, getModifier(sdlWindow),       // send communication to vGizmo3D...
                                           leftPress, x, y);             // ... checking if a key modifier currently is pressed
         }
-        if(rightPress != (mouseState & SDL_BUTTON_RMASK)) {                                  // check if rightButton state is changed
-            rightPress = mouseState & SDL_BUTTON_RMASK;                                    // set new (different!) state
+        if(rightPress != (mouseState & SDL_BUTTON_RMASK)) {             // check if rightButton state is changed
+            rightPress = mouseState & SDL_BUTTON_RMASK;                 // set new (different!) state
             track.mouse(vg::evRightButton, getModifier(sdlWindow),      // send communication to vGizmo3D...
                                            rightPress, x, y);           // ... checking if a key modifier currently is pressed
         }
-        //printf("%x \n", mouseState);
+    // vGizmo3D: if "drag" active update internal rotations (primary and secondary)
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         track.motion(x,y);
 
     // vGizmo3D: call it every rendering loop if you want a continue rotation until you do not click on screen

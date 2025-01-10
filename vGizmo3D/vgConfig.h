@@ -58,6 +58,36 @@
 //#define VGIZMO_USES_GLM
 
 //------------------------------------------------------------------------------
+// uncomment to avoid vgMath.h add folow line code:
+//      using namespace vgm | glm; // if (!VGIZMO_USES_GLM | VGIZMO_USES_GLM)
+//
+// Automatically "using namespace" is added to the end vgMath.h:
+//      it help to maintain compatibilty between vgMath & glm declaration types,
+//      but can go in confict with other pre-exist data types in your project
+//
+// note: this is only if you use vgMath.h in your project, for your data types:
+//       it have no effect for vGizmo | imGuIZMO internal use
+//
+// Default ==> vgMath.h add: using namespace vgm | glm;
+//------------------------------------------------------------------------------
+//#define VGM_DISABLE_AUTO_NAMESPACE
+
+//------------------------------------------------------------------------------
+// uncomment to use HLSL name types (in addition!)
+//
+// It add also the HLSL notation in addition to existing one:
+//      alias types:
+//          float  ==>  float2 / float3 / float4 / quat / float3x3 / float4x4
+//      and more TEMPLATE (only!) alias:
+//          double ==> double2 / double3 / double4 / dquat / double3x3 / double4x4
+//          int    ==> int2 / int3 / int4
+//          uint   ==> uint2 / uint3 / uint4
+//
+// Default ==> NO HLSL alia types defined
+//------------------------------------------------------------------------------
+//#define VGM_USES_HLSL_TYPES 
+
+//------------------------------------------------------------------------------
 // uncomment to use Left Handed system default call for specific functions:
 //
 //      lookAt
@@ -96,36 +126,6 @@
 // Default ==> Z-Buffer / depth-Buffer range [-1, 1]
 //------------------------------------------------------------------------------
 //#define VGM_USES_ZERO_ONE_ZBUFFER
-
-//------------------------------------------------------------------------------
-// uncomment to avoid vgMath.h add folow line code:
-//      using namespace vgm | glm; // if (!VGIZMO_USES_GLM | VGIZMO_USES_GLM)
-//
-// Automatically "using namespace" is added to the end vgMath.h:
-//      it help to maintain compatibilty between vgMath & glm declaration types,
-//      but can go in confict with other pre-exist data types in your project
-//
-// note: this is only if you use vgMath.h in your project, for your data types:
-//       it have no effect for vGizmo | imGuIZMO internal use
-//
-// Default ==> vgMath.h add: using namespace vgm | glm;
-//------------------------------------------------------------------------------
-//#define VGM_DISABLE_AUTO_NAMESPACE
-
-//------------------------------------------------------------------------------
-// uncomment to use HLSL name types (in addition!)
-//
-// It add also the HLSL notation in addition to existing one:
-//      alias types:
-//          float  ==>  float2 / float3 / float4 / quat / float3x3 / float4x4
-//      and more TEMPLATE (only!) alias:
-//          double ==> double2 / double3 / double4 / dquat / double3x3 / double4x4
-//          int    ==> int2 / int3 / int4
-//          uint   ==> uint2 / uint3 / uint4
-//
-// Default ==> NO HLSL alia types defined
-//------------------------------------------------------------------------------
-//#define VGM_USES_HLSL_TYPES 
 
 //  v g M a t h   C O N F I G   end
 ////////////////////////////////////////////////////////////////////////////////

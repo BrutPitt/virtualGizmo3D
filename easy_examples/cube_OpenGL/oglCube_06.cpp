@@ -268,7 +268,7 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
         glClearBufferfv(GL_DEPTH, 0, &f);
         glClearBufferfv(GL_COLOR, 0, value_ptr(bgColor));
 
-    // vGizmo3D: is necessary intercept mouse event not destined to ImGui
+    // vGizmo3D: check changing button state to activate/deactivate drag movements
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         static int leftPress = 0, rightPress = 0;
         double x, y;
@@ -283,7 +283,10 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
             track.mouse(vg::evRightButton, getModifier(glfwWindow),
                                            rightPress, x, y);
         }
-        track.motion(x,y);                                                          // if one button is pressed vGizmo3D catch the motion
+    // vGizmo3D: if "drag" active update internal rotations (primary and secondary)
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        track.motion(x,y);
+
     // vGizmo3D: call it every rendering loop if you want a continue rotation until you do not click on screen
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         track.idle();   // set continuous rotation on Idle: the slow rotation depends on speed of last mouse movement

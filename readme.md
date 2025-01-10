@@ -30,176 +30,231 @@ It works only on browsers with **WebGl2** and *webAssembly* support (FireFox/Ope
 
 ### How to use virtualGizmo3D in your code
 
-To use **virtualGizmo3D** need to include `virtualGizmo.h` file in your code and declare an object of type vfGizmo3DClass, global or as member of your class 
+To use **virtualGizmo3D** need to include `vGizmo3D.h` or `vGizmo.h` file in your code and declare an object of type `vGizmo3D`, global, static or as member of class
 
-```cpp
-#include "vGizmo.h"
 
-// Global or member class declaration
-using namespace vg;
-vGizmo3D gizmo; 
-vGizmo3D &getGizmo() { return gizmo; }  //optional helper
-```
+## Univocal / framework-independent initialization
 
-In your 3D engine *initialization* declare (overriding default ones) your preferred controls:
+```cpp                       
+#include <vGizmo3D.h> // or "vGizmo3D/vGizmo3D.h" ... or where it is 
 
-**GLFW buttons/keys initialization**
+/// vGizmo3D : declare global/static/member/..
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vg::vGizmo3D track;     // using vGizmo3D 
 
-```cpp
-void onInit()
+// vGizmo3D initialize: 
+// set/associate mouse BUTTON IDs and KEY modifier IDs to vGizmo3D functionalities
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void initVGizmo3D()     // Settings to control vGizmo3D
 {
-    //If you use a different framework simply associate internal ID with your preferences
+    // Initialization are necessary to associate your preferences to vGizmo3D
+    
+    // These are also the DEFAULT values, so if you want to maintain these combinations you can omit they
+    // and to override only the associations that you want modify
+    
+    // Main rotation
+        track.setGizmoRotControl         (vg::evButton1  /* or vg::evLeftButton */, 0 /* vg::evNoModifier */ );
+    // Rotations around specific axis: mouse button and key modifier
+        track.setGizmoRotXControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evShiftModifier);
+        track.setGizmoRotYControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evControlModifier);
+        track.setGizmoRotZControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
+    
+    // Set vGizmo3D control for secondary rotation (from v3.1)
+        track.setGizmoSecondaryRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
+        
+    // Pan and Dolly/Zoom: mouse button and key modifier
+        track.setDollyControl            (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
+        track.setPanControl              (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
+    
+    // N.B. vg::enums are ONLY mnemonic: select and pass specific vg::enum to framework (that can have also different IDs)
 
-    //For main manipulator/rotation
-    getGizmo().setGizmoRotControl( (vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) 0 /* evNoModifier */ );
-
-    //for pan and zoom/dolly... you can use also wheel to zoom
-    getGizmo().setDollyControl((vgButtons) GLFW_MOUSE_BUTTON_RIGHT, (vgModifiers) GLFW_MOD_CONTROL|GLFW_MOD_SHIFT);
-    getGizmo().setPanControl(  (vgButtons) GLFW_MOUSE_BUTTON_RIGHT, (vgModifiers) 0);
-
-    // Now call viewportSize with the dimension of window/screen
-    // It is need to set mouse sensitivity for rotation
-    // You need to call it also in your "reshape" function: when resize the window (look below)
-    getGizmo().viewportSize(GetWidth(), GetHeight());
-
-    // more... 
-    // if you need to rotate around a single axis have to select your preferences: uncomment below...
-    //
-    // getGizmo().setGizmoRotXControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_SHIFT); // around X pressing SHIFT+LButton
-    // getGizmo().setGizmoRotYControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_CONTROL); // around Y pressing CTRL+LButton
-    // getGizmo().setGizmoRotZControl((vgButtons) GLFW_MOUSE_BUTTON_LEFT, (vgModifiers) GLFW_MOD_ALT | GLFW_MOD_SUPER); // around Z pressing ALT|SUPER+LButton
-
-
-}    
-```
-**SDL buttons/keys Initialization**
-
-```cpp
-void onInit()
-{
-    //If you use a different framework simply associate internal ID with your preferences
-
-    //For main manipulator/rotation
-    getGizmo().setGizmoRotControl( (vgButtons) SDL_BUTTON_LEFT, (vgModifiers) 0 /* evNoModifier */ );
-
-    //for pan and zoom/dolly... you can use also wheel to zoom
-    getGizmo().setDollyControl((vgButtons) SDL_BUTTON_RIGHT, (vgModifiers) 0);
-    getGizmo().setPanControl(  (vgButtons) SDL_BUTTON_RIGHT, (vgModifiers) KMOD_CTRL|KMOD_SHIFT);
-
-    // Now call viewportSize with the dimension of window/screen
-    // It is need to set mouse sensitivity for rotation
-    // You need to call it also in your "reshape" function: when resize the window (look below)
-    getGizmo().viewportSize(GetWidth(), GetHeight());
-
-    // more... 
-    // if you need to rotate around a single axis have to select your preferences: uncomment below...
-    //
-    // getGizmo().setGizmoRotXControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_SHIFT); // around X pressing SHIFT+LButton
-    // getGizmo().setGizmoRotYControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_CTRL); // around Y pressing CTRL+LButton
-    // getGizmo().setGizmoRotZControl((vgButtons) SDL_BUTTON_LEFT, (vgModifiers) KMOD_ALT); // around Z pressing ALT+LButton
-
-}    
-```
-Now you need to add some *event* funtions:
-
-In your *Mouse-Button Event* function need to call:
-```cpp
-void onMouseButton(int button, int upOrDown, int x, int y)
-{
-    //  Call in 'mouse button event' the gizmo.mouse() func with:
-    //      button:  your mouse button
-    //      mod:     your modifier key -> CTRL, SHIFT, ALT, SUPER
-    //      pressed: if button is pressed (TRUE) or released (FALSE)
-    //      x, y:    mouse coordinates
-    bool isPressed = upOrDown==GLFW_PRESS; // or upOrDown==SDL_MOUSEBUTTONDOWN for SDL
-    getGizmo().mouse((vgButtons) (button), (vgModifiers) theApp->getModifier(), isPressed, x, y);
-
+    // passing the screen sizes auto-set the mouse sensitivity
+        track.viewportSize(width, height);      // call it on reshape to re-adjust mouse sensitivity
 }
 ```
 
-In your *Mouse-Motion Event* function need to call:
+
+
+Now you need to control some *event* funtions:
+
+## SDL environment
+Intercept Key Modifier state and return appropriate `vg::enum`
 ```cpp
-void onMotion(int x, int y)
-{
-    //  Call on motion event to communicate the position
-    getGizmo().motion(x, y);
+/// vGizmo3D: Check key modifier currently pressed (GLFW version)
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int getModifier(SDL_Window* window = nullptr) {
+    SDL_Keymod keyMod = SDL_GetModState();
+    if     (keyMod & KMOD_CTRL)     return vg::evControlModifier;
+    else if(keyMod & KMOD_SHIFT)    return vg::evShiftModifier;
+    else if(keyMod & KMOD_ALT)      return vg::evAltModifier;
+    else if(keyMod & KMOD_GUI)      return vg::evSuperModifier;
+    else return vg::evNoModifier;
+}
+
+
+```
+In main rendering loop intercept mouse button pression/release:
+```cpp                     
+    // vGizmo3D: check changing button state to activate/deactivate drag movements
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        static int leftPress = 0, rightPress = 0;
+        int x, y;
+        int mouseState = SDL_GetMouseState(&x, &y);
+        if(leftPress != (mouseState & SDL_BUTTON_LMASK)) {              // check if leftButton state is changed
+            leftPress = mouseState & SDL_BUTTON_LMASK ;                 // set new (different!) state
+            track.mouse(vg::evLeftButton, getModifier(sdlWindow),       // send communication to vGizmo3D...
+                                          leftPress, x, y);             // ... checking if a key modifier currently is pressed
+        }
+        if(rightPress != (mouseState & SDL_BUTTON_RMASK)) {             // check if rightButton state is changed
+            rightPress = mouseState & SDL_BUTTON_RMASK;                 // set new (different!) state
+            track.mouse(vg::evRightButton, getModifier(sdlWindow),      // send communication to vGizmo3D...
+                                           rightPress, x, y);           // ... checking if a key modifier currently is pressed
+        }
+    // vGizmo3D: if "drag" active update internal rotations (primary and secondary) 
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        track.motion(x,y);
+
+    // vGizmo3D: call it every rendering loop if you want a continue rotation until you do not click on screen
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        track.idle();   // set continuous rotation on Idle: the slow rotation depends on speed of last mouse movement, (currently) only on primary quaternion / rotation
+                        // It can be adjusted from setIdleRotSpeed(1.0) > more speed/sensibility, < less
+                        // It can be stopped by click on screen (without mouse movement)
+
+```
+
+## GLFW environment
+Intercept Key Modifier state and return appropriate `vg::enum`
+```cpp
+int getModifier(GLFWwindow* window) {
+    if((glfwGetKey(window,GLFW_KEY_LEFT_CONTROL)    == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS))
+            return vg::evControlModifier;
+    else if((glfwGetKey(window,GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_SHIFT)   == GLFW_PRESS))
+            return vg::evShiftModifier;
+    else if((glfwGetKey(window,GLFW_KEY_LEFT_ALT)   == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_ALT)     == GLFW_PRESS))
+            return vg::evAltModifier;
+    else if((glfwGetKey(window,GLFW_KEY_LEFT_SUPER) == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_SUPER)   == GLFW_PRESS))
+            return vg::evSuperModifier;
+    else return vg::evNoModifier;
 }
 ```
 
-And in your *Resize-Window Event* function :
+In main rendering loop intercept mouse button pression/release:
 ```cpp
-void onReshape(GLint w, GLint h)
+    // vGizmo3D: check changing button state to activate/deactivate drag movements
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        static int leftPress = 0, rightPress = 0;
+        double x, y;
+        glfwGetCursorPos(glfwWindow, &x, &y);
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_LEFT) != leftPress) {   // check if leftButton state is changed
+            leftPress = leftPress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) state
+            track.mouse(vg::evLeftButton, getModifier(glfwWindow),                  // send communication to vGizmo3D...
+                                          leftPress, x, y);                         // ... checking if a key modifier currently is pressed
+        }
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_RIGHT) != rightPress) { // same thing for rightButton
+            rightPress = rightPress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;
+            track.mouse(vg::evRightButton, getModifier(glfwWindow),
+                                           rightPress, x, y);
+        }
+    // vGizmo3D: if "drag" active update internal rotations (primary and secondary)
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        track.motion(x,y);
+        
+    // vGizmo3D: call it every rendering loop if you want a continue rotation until you do not click on screen
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        track.idle();   // set continuous rotation on Idle: the slow rotation depends on speed of last mouse movement
+                        // It can be adjusted from setIdleRotSpeed(1.0) > more speed, < less
+                        // It can be stopped by click on screen (without mouse movement)
+```   
+
+With GLFW mouse callbacks (in alternative)
+```cpp
+static void glfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-    // call it on resize window to re-align mouse sensitivity
-    getGizmo().viewportSize(w, h);
+    double x,y;
+    glfwGetCursorPos(window, &x, &y);
+
+    int myButton;
+
+    switch(button) {
+        case GLFW_MOUSE_BUTTON_1    : // GLFW_MOUSE_BUTTON_LEFT
+            myButton = vg::evButton1; // or vg::evButtonLeft
+            break;
+        case GLFW_MOUSE_BUTTON_2    : // GLFW_MOUSE_BUTTON_RIGHT
+            myButton = vg::evButton2; // or vg::evButtonRight
+            break;
+        case GLFW_MOUSE_BUTTON_3    : // GLFW_MOUSE_BUTTON_MIDDLE
+            myButton = vg::evButton3; // or vg::evButtonMiddle
+            break;
+        default :
+            myButton = -1;
+    }
+    // in GLFW "CURRENTLY" button ID & vg::enums coincide, so all the switch/case statement can be also omitted and pass directly "button" instead of "myButton"
+    // in "mouse" call, but is good rule always to check framework IDs (in case of future changes) and select preferred vg::enum
+    if(myButton>=0)
+        track.mouse((vgButtons) myButton, (vgModifiers) getModifier(glfwWindow), action == GLFW_PRESS, (int)x, (int)y);
 }
+
+static void glfwMousePosCallback(GLFWwindow* window, double x, double y)
+{
+    track.motion(x, y);
+}      
+
+// Available only via callback (no event are intercepted by GLFW)
+static void glfwScrollCallback(GLFWwindow* window, double x, double y)
+{
+    track.wheel(x, y);  // now we can use wheel to zoom
+}
+
 ```
 
-And finally, in your render function (or where you prefer) you can get the transformations
+## Build MVP matrix
+
+And finally, before the function *draw*, transfer the rotations to build MVP matrix:
 ```cpp
-void onRender() //or when you prefer
-{
-    mat4 model(1.0f);                          // Identity matrix
+    // transferring the rotation to cube model matrix...
+        mat4 modelMatrix = cubeObj * mat4_cast(track.getRotation());
 
-    // virtualGizmo transformations
-    getGizmo().applyTransform(model);           // apply transform to matrix model
+    // Build a "translation" matrix with Pan & Dolly position
+        mat4 translationMatrix = translate(mat4(1), track.getPosition());  // add translations (pan/dolly) to an identity matrix
 
-    // Now the matrix 'model' has inside all the transformations:
-    // rotation, pan and dolly translations, 
-    // and you can build MV and MVP matrix
-}
+    // build MVPs matrices to pass to shader
+        mvpMatrix   = projMatrix * viewMatrix * compensateView * translationMatrix * modelMatrix;
+        lightMatrix = projMatrix * viewMatrix * compensateView * translationMatrix * (static_cast<mat4>(track.getSecondRot())) /* secondary quat rotation */ * lightObj /* lightModelMatrix */; 
 ```
 
 <p>&nbsp;<br></p>
 
  
-### Other useful stuff
-
-If you need to more feeling with the mouse use:
-`getGizmo().setGizmoFeeling(1.0); // 1.0 default,  > 1.0 more sensible, < 1.0 less`
-
-Same thing for Dolly and Pan:
+### Other useful setting stuff 
 
 ```cpp
- getGizmo().setDollyScale(1.0f);
- getGizmo().setPanScale(1.0f);
-```
-You probably will need to set center of rotation (default: origin), Dolly position (default: 1.0), and Pan position (default: vec2(0.0, 0.0)
-
-```cpp
- getGizmo().setDollyPosition(1.0f); 
- getGizmo().setPanPosition(vec3(0.0f);
- getGizmo().setRotationCenter(vec3(0.0));
-```
-
-If you want a *continuous rotation*, that you can stop with a click, like in example, need to add the below call in your Idle function, or inside of the main render loop
-
-```cpp
-void onIdle()
-{
-    // call it every rendering if want an continue rotation until you do not click on screen
-    // look at glApp.cpp : "mainLoop" ("newFrame") functions
-
-    getGizmo().idle();
-}
+    // other settings if you need it
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    track.setDollyScale(1.0f);               // > 1.0 more sensible, < 1.0 less sensible
+    track.setDollyPosition(/* your pos */);  // input: float/double or vec3... in vec3 only Z is acquired
+    track.setPanScale(1.0f);                 // > 1.0 more sensible, < 1.0 less sensible
+    track.setPanyPosition(/* your pos */);   // vec3 ==> only X and Y are acquired
+    track.setPosition(/* your pos */);       // input vec3 is equivalent to call: track.setDollyPosition(/* your pos */); and track.setPanyPosition(/* your pos */);
+    track.setRotationCenter(/* vec3 */);     // new rotation center
+    track.setIdleRotSpeed(1.0)               // If used Idle() feature (continue rotation on Idle) it set that speed: more speed > 1.0 ,  less < 1.0
 ```
 
 **Class declaration**
 
-The include file `vGizmo.h` contains two classes:
-- `virtualGizmoClass` simple rotation manipulator, used mainly for [**imGuIZMO.quat**](https://github.com/BrutPitt/imGuIZMO.quat) (a GIZMO widget developed for ImGui, Graphic User Intefrace)
-- `virtualGizmo3DClass` manipulator (like above) with dolly/zoom and pan/shift
+The include file `vGizmo3D.h` or `vGizmo.h` contains two classes:
+- `virtualGizmoClass` simple rotation manipulator, currently **deprecated**, well be removed on next release
+- `virtualGizmo3DClass` manipulator with dolly/zoom and pan/shift
 - Template classes are also available if configured. &nbsp; **(read below)*
 
 Helper `typedef` are also defined:
 ```cpp
-    using vGizmo    = virtualGizmoClass;
+    using vGizmo    = virtualGizmoClass;    // deprecated
     using vGizmo3D  = virtualGizmo3DClass;
 ```
 <p>&nbsp;<br></p>
 
 ## Configure virtualGizmo3D
-**virtalGizmo3D** uses [**vgMath**](https://github.com/BrutPitt/vgMath) tool, it contains a group of vector/matrices/quaternion classes, operators, and principal functions. It uses the "glsl" convention for types and function names so is compatible with **glm** types and function calls: [**vgMath**](https://github.com/BrutPitt/vgMath) is a subset of [**glm** mathematics library](https://github.com/g-truc/glm) and so you can use first or upgrade to second via a simple `#define`. However **vgMath** does not want replicate **glm**, is only intended to make **virtalGizmo3D** standalone, and avoid **template classes** use in the cases of low resources or embedded systems.
+**virtalGizmo3D** uses [**vgMath**](https://github.com/BrutPitt/vgMath) tool, it contains a group of vector/matrices/quaternion classes, operators, and principal functions. It uses the "glsl" convention for types and function names so is compatible with **glm** types and function calls: [**vgMath**](https://github.com/BrutPitt/vgMath) is a subset of [**glm** mathematics library](https://github.com/g-truc/glm) and so you can use first or upgrade to second via a simple `#define`. However **vgMath** does not want replicate **glm**, is only intended to make **vGizmo3D** (and [**imguizmo_quat**](https://github.com/BrutPitt/imGuIZMO.quat)) standalone, and avoid use of **template classes** in the cases of low resources or embedded systems.
 
 
 The file `vgConfig.h` allows to configure internal math used form **virtalGizmo3D**. In particular is possible select between:
@@ -209,87 +264,36 @@ The file `vgConfig.h` allows to configure internal math used form **virtalGizmo3
  - **enable** (*Default*) / **disable** automatic entry of `using namespace vgm;` at end of `vgMath.h` (it influences only your external use of `vgMath.h`)
 - Add additional HLSL types name convention
  
-You can do this simply by commenting / uncommenting a line in `vgConfig.h` or adding related "define" to your project, as you can see below:
+You can do this simply by commenting / uncommenting a line in `vgConfig.h` or adding related "define" to your project, you can:
+       
+- Using [template internal vgMath/vGizmo3D classes/types](https://github.com/BrutPitt/virtualGizmo3D/blob/ec31006140293886aa373c0eaa736254c33e1a9f/vGizmo3D/vgConfig.h#L27C1-L42C28)
+- Selecting [preferred math library between **glm** or internal **vgMath**](https://github.com/BrutPitt/virtualGizmo3D/blob/ec31006140293886aa373c0eaa736254c33e1a9f/vGizmo3D/vgConfig.h#L60-L73)
+- Disabling [*auto-namespace*](https://github.com/BrutPitt/virtualGizmo3D/blob/ec31006140293886aa373c0eaa736254c33e1a9f/vGizmo3D/vgConfig.h#L60-L73), used to switch between glm (glm::) and vgMath (vgm::) 
+- Setting [LeftHanded / RightHanded system](https://github.com/BrutPitt/virtualGizmo3D/blob/ec31006140293886aa373c0eaa736254c33e1a9f/vGizmo3D/vgConfig.h#L90-L109) (as default)
+- Setting [Z-Buffer range [-1, 1] (OpenGL) or [0, 1] (Vulkan)](https://github.com/BrutPitt/virtualGizmo3D/blob/ec31006140293886aa373c0eaa736254c33e1a9f/vGizmo3D/vgConfig.h#L111-L128) (as default)
 
-```cpp
-// uncomment to use TEMPLATE internal vgMath classes/types
-//
-// This is if you need to extend the use of different math types in your code
-//      or for your purposes, there are predefined alias:
-//          float  ==>  vec2 / vec3 / vec4 / quat / mat3|mat3x3 / mat4|mat4x4
-//      and more TEMPLATE (only!) alias:
-//          double ==> dvec2 / dvec3 / dvec4 / dquat / dmat3|dmat3x3 / dmat4|dmat4x4
-//          int    ==> ivec2 / ivec3 / ivec4
-//          uint   ==> uvec2 / uvec3 / uvec4
-// If you select TEMPLATE classes the widget too will use internally them 
-//      with single precision (float)
-//
-// Default ==> NO template
-//------------------------------------------------------------------------------
-//#define VGM_USES_TEMPLATE
-```
-```cpp
-// uncomment to use "glm" (0.9.9 or higher) library instead of vgMath
-//      Need to have "glm" installed and in your INCLUDE research compiler path
-//
-// vgMath is a subset of "glm" and is compatible with glm types and calls
-//      change only namespace from "vgm" to "glm". It's automatically set by
-//      including vGizmo.h or vgMath.h or imGuIZMOquat.h
-//
-// Default ==> use vgMath
-//      If you enable GLM use, automatically is enabled also VGM_USES_TEMPLATE
-//          if you can, I recommend to use GLM
-//------------------------------------------------------------------------------
-//#define VGIZMO_USES_GLM
-```
-```cpp
-// uncomment to use LeftHanded 
-//
-// This is used only in: lookAt / perspective / ortho / frustrum - functions
-//      DX is LeftHanded, OpenGL is RightHanded
-//
-// Default ==> RightHanded
-//------------------------------------------------------------------------------
-//#define VGM_USES_LEFT_HAND_AXES
-```
-**From v.2.1**
-```cpp
-// uncomment to avoid vgMath.h add folow line code:
-//      using namespace vgm | glm; // if (!VGIZMO_USES_GLM | VGIZMO_USES_GLM)
-//
-// Automatically "using namespace" is added to the end vgMath.h:
-//      it help to maintain compatibilty between vgMath & glm declaration types,
-//      but can go in confict with other pre-exist data types in your project
-//
-// note: this is only if you use vgMath.h in your project, for your data types:
-//       it have no effect for vGizmo | imGuIZMO internal use
-//
-// Default ==> vgMath.h add: using namespace vgm | glm;
-//------------------------------------------------------------------------------
-//#define VGM_DISABLE_AUTO_NAMESPACE
-```
-```cpp
-// uncomment to use HLSL name types (in addition!) 
-//
-// It add also the HLSL notation in addition to existing one:
-//      alias types:
-//          float  ==>  float2 / float3 / float4 / quat / float3x3 / float4x4
-//      and more TEMPLATE (only!) alias:
-//          double ==> double2 / double3 / double4 / dquat / double3x3 / double4x4
-//          int    ==> int2 / int3 / int4
-//          uint   ==> uint2 / uint3 / uint4
-//
-// Default ==> NO HLSL alia types defined
-//------------------------------------------------------------------------------
-//#define VGM_USES_HLSL_TYPES 
-```
+<p>&nbsp;<br></p>
+
+#### About glm and vgMath:
 - *If your project grows you can upgrade/pass to **glm**, in any moment*
 - *My [**glChAoS.P**](https://github.com/BrutPitt/glChAoS.P) project can switch from internal **vgMath** (`VGIZMO_USES_TEMPLATE`) to **glm** (`VGIZMO_USES_GLM`), and vice versa, only changing defines: you can examine it as example*
+- *Can use an optional CMake statement, like this:*
+```cmake                                                          
+#OFF: use vgMath, ON: force GLM anyway
+option(IMGUIZMO_USES_GLM "Use GLM instead of internal vgMath" OFF)
+
+find_package(glm CONFIG)  
+
+# if GLM package was found, then uses it (also if option = OFF)
+if(glm_FOUND OR IMGUIZMO_USES_GLM)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVGIZMO_USES_GLM")
+endif()
+```
 
 
 <p>&nbsp;<br></p>
 
-## Building Example
+## Building Example - *Still to be updated to version 3.1*
 
 The source code example shown in the animated gif screenshot, is provided.
 

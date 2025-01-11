@@ -7,7 +7,7 @@ It uses **quaternions** algebra, internally, to manage rotations, but you can al
 
 ![alt text](https://raw.githubusercontent.com/BrutPitt/virtualGizmo3D/master/screenshots/oglGizmo.gif)
 
-**vGizmo3D** / **virtualGizmo3D** is an *header only* tool (`vGizmo3D.h`) and **is not bound to frameworks or render engines**, is written in C++ (C++17) and uses [**vgMath**](https://github.com/BrutPitt/vgMath) a compact (my *single file header only*) vectors/matrices/quaternions tool/lib that makes **virtualGizmo3D** standalone.
+**vGizmo3D** / **virtualGizmo3D** is an *header only* tool (`vGizmo3D.h`) and **is not bound to frameworks or render engines**, is written in C++ (C++17) and uses [**vgMath**](https://github.com/BrutPitt/vgMath) a compact (my *single file header only*) vectors/matrices/quaternions tool/lib that makes **virtualGizmo3D** standalone.\
 **Alternatively you can use [**glm**](https://github.com/g-truc/glm) with a simple define: read [about glm and vgMath](#about-glm-and-vgmath)*
 
 **No other files or external libraries are required**
@@ -22,15 +22,16 @@ If need a larger/complete library, as alternative to **virtualGizmo3D**, is also
 
 
 
-### Live WebGL2 example
+### Live WebGL2 examples
 You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from following link:
-- [virtualGizmo3D WebGL2](https://www.michelemorrone.eu/emsExamples/oglGizmo.html)
+- [vGizmo3D v2.0 WebGL2](https://www.michelemorrone.eu/emsExamples/oglGizmo.html)
+- [vGizmo3D v3.1 WebGL2 - easy_cube example](https://brutpitt.github.io/myRepos/vGizmo3D/wglCubeExamples.html)
 
 It works only on browsers with **WebGl2** and *webAssembly* support (FireFox/Opera/Chrome and Chromium based): test if your browser supports **WebGL2**, here: [WebGL2 Report](http://webglreport.com/?v=2)
 
 <p>&nbsp;<br></p>
 
-## How to use virtualGizmo3D in your code
+## How to use vGizmo3D in your code
 
 *The following code is taken from the new [easy_examples](https://github.com/BrutPitt/virtualGizmo3D/tree/master/easy_examples)*
 
@@ -51,7 +52,7 @@ vg::vGizmo3D track;     // using vGizmo3D
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void initVGizmo3D()     // Settings to control vGizmo3D
 {
-    // Initialization are necessary to associate your preferences to vGizmo3D
+    // Initialization is necessary to associate your preferences to vGizmo3D
     
     // These are also the DEFAULT values, so if you want to maintain these combinations you can omit they
     // and to override only the associations that you want modify
@@ -72,14 +73,14 @@ void initVGizmo3D()     // Settings to control vGizmo3D
     
     // N.B. vg::enums are ONLY mnemonic: select and pass specific vg::enum to framework (that can have also different IDs)
 
-    // passing the screen sizes auto-set the mouse sensitivity
-        track.viewportSize(width, height);      // call it on reshape to re-adjust mouse sensitivity
+    // passing the screen sizes to vGizmo3D: this auto-set the mouse sensitivity
+        track.viewportSize(width, height);      // call it ALSO on reshape to re-adjust mouse sensitivity
 }
 ```
 
 
 
-Now is necessary to control some *event* funtions:
+Now is necessary to control some mouse and key *event* funtions:
 
 ## SDL environment
 Get Key-Modifier state and return appropriate `vg::enum`
@@ -115,11 +116,11 @@ In main rendering loop intercept mouse button pression/release:
             track.mouse(vg::evRightButton, getModifier(sdlWindow),      // send communication to vGizmo3D...
                                            rightPress, x, y);           // ... checking if a key modifier currently is pressed
         }
-    // vGizmo3D: if "drag" active update internal rotations (primary and secondary) 
+    // if "drag" was activated, "motion" call updates internal rotations (primary and secondary) 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         track.motion(x,y);
 
-    // vGizmo3D: call it every rendering loop if you want a continue rotation until you do not click on screen
+    // Not mandatory: call it every rendering loop only if you want a (possible) continue idle rotation until you do not click on screen
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         track.idle();   // set continuous rotation on Idle: the slow rotation depends on speed of last mouse movement, (currently) only on primary quaternion / rotation
                         // It can be adjusted from setIdleRotSpeed(1.0) > more speed/sensibility, < less
@@ -177,6 +178,7 @@ In main rendering loop intercept mouse button pression/release:
 ### GLFW Callbacks
 Using GLFW mouse callbacks (in alternative)
 ```cpp
+// onMouseButton callback: any button pressed/released
 static void glfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
     double x,y;
@@ -203,24 +205,25 @@ static void glfwMouseButtonCallback(GLFWwindow* window, int button, int action, 
         track.mouse((vgButtons) myButton, (vgModifiers) getModifier(glfwWindow), action == GLFW_PRESS, (int)x, (int)y);
 }
 
+// onMouseMotion callback: mouse cursor position changed
 static void glfwMousePosCallback(GLFWwindow* window, double x, double y)
 {
     track.motion(x, y);
 }      
 
-// Available only via callback (no event are intercepted by GLFW)
+// wheel rotation callback: available only via callback (no event are sent by GLFW)
 static void glfwScrollCallback(GLFWwindow* window, double x, double y)
 {
-    track.wheel(x, y);  // now we can use wheel to zoom
+    track.wheel(x, y);  // now we can use wheel to Dolly/Zoom
 }
 
 ```
 
 ## Build MVP matrix
 
-And finally, before the function *draw*, transfer the rotations to build MVP matrix:
+And finally, before to call the *draw* function, transfer the rotations to build MVP matrix:
 ```cpp
-    // transferring the rotation to cube model matrix...
+    // transferring the rotation to cube model matrix cubeObj...
         mat4 modelMatrix = cubeObj * mat4_cast(track.getRotation());
 
     // Build a "translation" matrix with Pan & Dolly position
@@ -228,50 +231,57 @@ And finally, before the function *draw*, transfer the rotations to build MVP mat
 
     // build MVPs matrices to pass to shader
         mvpMatrix   = projMatrix * viewMatrix * compensateView * translationMatrix * modelMatrix;
-        lightMatrix = projMatrix * viewMatrix * compensateView * translationMatrix * (static_cast<mat4>(track.getSecondRot())) /* secondary quat rotation */ * lightObj /* lightModelMatrix */; 
+        lightMatrix = projMatrix * viewMatrix * compensateView * translationMatrix * mat4_cast(track.getSecondRot()) * lightObj /* lightModelMatrix */; 
 ```
 *The whole code is taken from the new [easy_examples](https://github.com/BrutPitt/virtualGizmo3D/tree/master/easy_examples)*
 
 <p>&nbsp;<br></p>
 
-### Other useful setting stuff 
+### Other useful stuff
+Settings functions to override the default values
 
 ```cpp
-    // other settings if you need it
+    // other settings if you need it (public member of vGizmo3D) 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    track.setDollyScale(1.0f);               // > 1.0 more sensible, < 1.0 less sensible
-    track.setDollyPosition(/* your pos */);  // input: float/double or vec3... in vec3 only Z is acquired
-    track.setPanScale(1.0f);                 // > 1.0 more sensible, < 1.0 less sensible
-    track.setPanyPosition(/* your pos */);   // vec3 ==> only X and Y are acquired
-    track.setPosition(/* your pos */);       // input vec3 is equivalent to call: track.setDollyPosition(/* your pos */); and track.setPanyPosition(/* your pos */);
-    track.setRotationCenter(/* vec3 */);     // new rotation center
-    track.setIdleRotSpeed(1.0)               // If used Idle() feature (continue rotation on Idle) it set that speed: more speed > 1.0 ,  less < 1.0
+    setGizmoFeeling(1.0f)              // set feeling/sensitivity for the rotations (primary and secondary): less < 1.0 < more 
+    setDollyScale(1.0f);               // Dolly mouse drag sensitivity: less < 1.0 < more
+    setPanScale(1.0f);                 // Pan mouse drag sensitivity: less < 1.0 < more
+    setWheelScale(1.0f);               // wheel sensitivity:  less < 1.0 < more
+    setIdleRotSpeed(1.0)               // If used Idle() feature (continue rotation on Idle) it set the sensitivity of that speed: less < 1.0 < more
+    setDollyPosition(/* your pos */);  // input: float/double or vec3... in vec3 only Z is acquired
+    setPanPosition(/* your pos */);    // vec3 ==> only X and Y are acquired
+    setPosition(/* your pos */);       // input vec3 is equivalent to call: setDollyPosition(/* your pos */) and setPanPosition(/* your pos */);
+    setRotationCenter(/* vec3 */);     // new rotation center, default vec3(0.0)
+    
+    // there are (obviously) the corresponding all GET functions that return current value 
 ```
 
-Just a "trick": simulate a double press (left+right button) using MIDDLE button to rotate cube and light spot together 
+Just a "trick": Using MIDDLE button to rotate two objects togethers (e.g. objModel + lightSpot): simulating a double press (left+right button)   
     
 **SDL**
 ```cpp
         // Simulating a double press (left+right button) using MIDDLE button,
-        // sending two "consecutive" activation/deactivation to rotate cube and light spot together
+        // sending two "consecutive" activation/deactivation calls to rotate obj-model and light spot together
         if(middlePress != (mouseState & SDL_BUTTON_MMASK)) {             // check if middleButton state is changed
             middlePress = mouseState & SDL_BUTTON_MMASK;                 // set new (different!) middle button state
             track.mouse(vg::evRightButton, getModifier(sdlWindow), middlePress, x, y);  // call Right activation/deactivation with same "middleStatus"
             track.mouse(vg::evLeftButton,  getModifier(sdlWindow), middlePress, x, y);  // call Left  activation/deactivation with same "middleStatus"
-        } 
+        }
+        // To put together to other mouse button checks, and before of `track.motion(x,y);` call
+ 
 ```
 **GLFW**
 ```cpp
         // Simulating a double press (left+right button) using MIDDLE button,
-        // sending two "consecutive" activation/deactivation to rotate cube and light spot together
+        // sending two "consecutive" activation/deactivation calls to rotate obj-model and light spot together
         if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE) != middlePress) {   // check if middleButton state is changed
             middlePress = middlePress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) middle button state
             track.mouse(vg::evLeftButton, getModifier(glfwWindow),  middlePress, x, y); // call Left activation/deactivation with same "middleStatus"
             track.mouse(vg::evRightButton, getModifier(glfwWindow), middlePress, x, y); // call Right activation/deactivation with same "middleStatus"
         }
-        // same method can be used for the callbacks 
+        // To put together to other mouse button checks, and before of `track.motion(x,y);` call
+        // A same method can be used also for the callbacks 
 ```
-Put together to other mouse button checks, and before `track.motion(x,y);` call\
 *The whole code is contained in the new [easy_examples](https://github.com/BrutPitt/virtualGizmo3D/tree/master/easy_examples)*
 
 **Class declaration**

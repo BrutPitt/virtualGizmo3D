@@ -100,6 +100,7 @@ int getModifier(SDL_Window* window = nullptr) {
 In main rendering loop intercept mouse button pression/release:
 ```cpp                     
     // vGizmo3D: check changing button state to activate/deactivate drag movements
+    //           (pressing together left/right activate/deactivate both)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         static int leftPress = 0, rightPress = 0;
         int x, y;
@@ -129,6 +130,8 @@ In main rendering loop intercept mouse button pression/release:
 ## GLFW environment
 Get Key-Modifier state and return appropriate `vg::enum`
 ```cpp
+/// vGizmo3D: Check key modifier currently pressed (GLFW version)
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int getModifier(GLFWwindow* window) {
     if((glfwGetKey(window,GLFW_KEY_LEFT_CONTROL)    == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS))
             return vg::evControlModifier;
@@ -145,6 +148,7 @@ int getModifier(GLFWwindow* window) {
 In main rendering loop intercept mouse button pression/release:
 ```cpp
     // vGizmo3D: check changing button state to activate/deactivate drag movements
+    //           (pressing together left/right activate/deactivate both)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         static int leftPress = 0, rightPress = 0;
         double x, y;
@@ -243,6 +247,32 @@ And finally, before the function *draw*, transfer the rotations to build MVP mat
     track.setRotationCenter(/* vec3 */);     // new rotation center
     track.setIdleRotSpeed(1.0)               // If used Idle() feature (continue rotation on Idle) it set that speed: more speed > 1.0 ,  less < 1.0
 ```
+
+Just a "trick": simulate a double press (left+right button) using MIDDLE button to rotate cube and light spot together 
+    
+**SDL**
+```cpp
+        // Simulating a double press (left+right button) using MIDDLE button,
+        // sending two "consecutive" activation/deactivation to rotate cube and light spot together
+        if(middlePress != (mouseState & SDL_BUTTON_MMASK)) {             // check if middleButton state is changed
+            middlePress = mouseState & SDL_BUTTON_MMASK;                 // set new (different!) middle button state
+            track.mouse(vg::evRightButton, getModifier(sdlWindow), middlePress, x, y);  // call Right activation/deactivation with same "middleStatus"
+            track.mouse(vg::evLeftButton,  getModifier(sdlWindow), middlePress, x, y);  // call Left  activation/deactivation with same "middleStatus"
+        } 
+```
+**GLFW**
+```cpp
+        // Simulating a double press (left+right button) using MIDDLE button,
+        // sending two "consecutive" activation/deactivation to rotate cube and light spot together
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE) != middlePress) {   // check if middleButton state is changed
+            middlePress = middlePress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) middle button state
+            track.mouse(vg::evLeftButton, getModifier(glfwWindow),  middlePress, x, y); // call Left activation/deactivation with same "middleStatus"
+            track.mouse(vg::evRightButton, getModifier(glfwWindow), middlePress, x, y); // call Right activation/deactivation with same "middleStatus"
+        }
+        // same method can be used for the callbacks 
+```
+Put together to other mouse button checks, and before `track.motion(x,y);` call\
+*The whole code is contained in the new [easy_examples](https://github.com/BrutPitt/virtualGizmo3D/tree/master/easy_examples)*
 
 **Class declaration**
 

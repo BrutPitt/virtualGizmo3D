@@ -26,8 +26,8 @@ int width = 1280, height = 800;
 SDL_Window *sdlWindow = nullptr;
 SDL_GLContext gl_context;
 
-const int nVertex = sizeof(coloredCubeData)/(sizeof(float)*2);
-GLuint nElemVtx = 4;
+const int nElemVtx = 4;
+const size_t nVertex = sizeof(coloredCubeData)/(sizeof(float)*2*nElemVtx);
 
 // Shaders & Vertex attributes
 GLuint program, vao, vaoBuffer;
@@ -123,7 +123,7 @@ void initGL()
     GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vertex_instanced, NULL);
     glCompileShader(vertex);
-    glCompileShader(vertex);
+    checkShader(vertex);
 
     GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fragment_code, NULL);
@@ -207,7 +207,7 @@ void initFramework()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void initVGizmo3D()     // Settings to control vGizmo3D
 {
-    // Initialization are necessary to associate your preferences to vGizmo3D
+    // Initialization is necessary to associate your preferences to vGizmo3D
     // These are also the DEFAULT values, so if you want to maintain these combinations you can omit they
     // and to override only the associations that you want modify
         track.setGizmoRotControl         (vg::evButton1  /* or vg::evLeftButton */, 0 /* vg::evNoModifier */ );
@@ -285,9 +285,9 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
         glClearBufferfv(GL_COLOR, 0, value_ptr(bgColor));
 
 
-    // vGizmo3D: check changing button state to activate/deactivate drag movements
+    // vGizmo3D: check changing button state to activate/deactivate drag movements  (pressing both activate/deacivate both functionality)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        static int leftPress = 0, rightPress = 0;
+        static int leftPress = 0, rightPress = 0, middlePress;
         int x, y;
         int mouseState = SDL_GetMouseState(&x, &y);
         if(leftPress != (mouseState & SDL_BUTTON_LMASK)) {              // check if leftButton state is changed
@@ -300,6 +300,14 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
             track.mouse(vg::evRightButton, getModifier(sdlWindow),      // send communication to vGizmo3D...
                                            rightPress, x, y);           // ... checking if a key modifier currently is pressed
         }
+        // Simulating a double press (left+right button) using MIDDLE button,
+        // sending two "consecutive" activation/deactivation to rotate cube and light spot together
+        if(middlePress != (mouseState & SDL_BUTTON_MMASK)) {             // check if middleButton state is changed
+            middlePress = mouseState & SDL_BUTTON_MMASK;                 // set new (different!) middle button state
+            track.mouse(vg::evRightButton, getModifier(sdlWindow), middlePress, x, y);  // call Right activation/deactivation with same "middleStatus"
+            track.mouse(vg::evLeftButton,  getModifier(sdlWindow), middlePress, x, y);  // call Left  activation/deactivation with same "middleStatus"
+        } 
+
     // vGizmo3D: if "drag" active update internal rotations (primary and secondary)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         track.motion(x,y);

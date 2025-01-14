@@ -11,9 +11,15 @@
 //  This software is distributed under the terms of the BSD 2-Clause license
 //------------------------------------------------------------------------------
 #include <cstdlib>
-#include <cfloat>
 #include <iostream>
+#include <cfloat>
+#ifdef __EMSCRIPTEN__
+    #include <emscripten.h>
+    #include <emscripten/html5.h>
+    #include <GLES3/gl3.h>
+#else
 #include <glad/glad.h>
+#endif
 #include <GLFW/glfw3.h>
 
 #include "oglDebug.h"
@@ -21,15 +27,13 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // vGizmo3D:
-#include <vGizmo3D/vGizmo3D.h> // now also vGizmo3D.h from v3.1
+#include <vGizmo3D/vGizmo3D.h> // now also imguizmo_quat.h from v3.1
 
 int width = 1280, height = 800;
 GLFWwindow *glfwWindow;
 
 const int nElemVtx = 4;
 const size_t nVertex = sizeof(coloredCubeData)/(sizeof(float)*2*nElemVtx);
-
-int getModifier(GLFWwindow* window);
 
 // Shaders & Vertex attributes
 GLuint program, vao, vaoBuffer;
@@ -38,7 +42,7 @@ enum loc { vtxIdx = 0, colIdx, mvpIdx, lightIdx};     // shader locations
 mat4 mvpMatrix, viewMatrix, projMatrix;
 mat4 lightObj, lightMatrix, cubeObj;
 
-/// vGizmo3D : declare global/static/member/..
+/// imGuIZMO / vGizmo3D : declare global/static/member/..
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 vg::vGizmo3D track;     // using vGizmo3D global/static/member instead of specifics variables...
                         // have rotations & Pan/Dolly position variables inside to use with imGuIZMO.quat
@@ -50,8 +54,15 @@ void draw()
 {
     glUseProgram(program);
 
+#ifdef __EMSCRIPTEN__
+    static uint mvpLoc = glGetUniformLocation(program, "mvp");
+    static uint lghLoc = glGetUniformLocation(program, "light");
+    glUniformMatrix4fv(mvpLoc, 1, false, value_ptr(mvpMatrix)  );  // vgMath permits cast to mat4*
+    glUniformMatrix4fv(lghLoc, 1, false, value_ptr(lightMatrix));  // using value_ptr maintains GLM compatibility
+#else
     glProgramUniformMatrix4fv(program, loc::mvpIdx,   1, false, value_ptr(mvpMatrix)  );  // vgMath permits cast to mat4*
     glProgramUniformMatrix4fv(program, loc::lightIdx, 1, false, value_ptr(lightMatrix));  // using value_ptr maintains GLM compatibility
+#endif
 
     glBindVertexArray(vao);
     //glDrawArrays(GL_TRIANGLES, 0, nVertex);
@@ -120,51 +131,29 @@ void glfwWindowSizeCallback(GLFWwindow* window, int w, int h)
 
 void glfwScrollCallback(GLFWwindow* window, double x, double y)
 {
-    track.wheel(x, y);  // now we can use wheel to zoom
+    track.wheel(x, y);
 }
-
-void glfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
-{
-    double x,y;
-    glfwGetCursorPos(window, &x, &y);
-
-    int myButton;
-
-    switch(button) {
-        case GLFW_MOUSE_BUTTON_1    : // GLFW_MOUSE_BUTTON_LEFT
-            myButton = vg::evButton1; // vg::evButtonLeft
-            break;
-        case GLFW_MOUSE_BUTTON_2    : // GLFW_MOUSE_BUTTON_RIGHT
-            myButton = vg::evButton2; // || vg::evButtonRight
-            break;
-        case GLFW_MOUSE_BUTTON_3    : // GLFW_MOUSE_BUTTON_MIDDLE
-            myButton = vg::evButton3; // || vg::evButtonMiddle
-            break;
-        default :
-            myButton = -1;
-    }
-    // in GLFW "CURRENTLY" button ID & vg::enums coincide, so all the switch/case statement can be also omitted and pass directly "button"
-    // in "mouse" call, but is good rule always to check framework IDs (in case of future changes) and select preferred vg::enum
-    if(myButton>=0)
-        track.mouse((vgButtons) myButton, (vgModifiers) getModifier(glfwWindow), action == GLFW_PRESS, (int)x, (int)y);
-}
-
-static void glfwMousePosCallback(GLFWwindow* window, double x, double y)
-{
-    track.motion(x, y);
-}
+#ifdef __EMSCRIPTEN__
+    const char *vertT  = wgl_vertex_instanced;
+    const char *fragT  = wgl_fragment_code;
+#else
+    const char *vertT  = vertex_instanced;
+    const char *fragT  = fragment_code;
+#endif
 
 void initGL()
 {
+#ifndef __EMSCRIPTEN__
     enableDebugCallback();
+#endif
 
     GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vertex_instanced, NULL);
+    glShaderSource(vertex, 1, &vertT, NULL);
     glCompileShader(vertex);
     checkShader(vertex);
 
     GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fragment_code, NULL);
+    glShaderSource(fragment, 1, &fragT, NULL);
     glCompileShader(fragment);
     checkShader(fragment);
 
@@ -177,6 +166,20 @@ void initGL()
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
+#ifdef __EMSCRIPTEN__
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vaoBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER,vaoBuffer);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(coloredCubeData), coloredCubeData, GL_STATIC_READ);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vaoBuffer);
+    glVertexAttribPointer(    loc::vtxIdx, nElemVtx, GL_FLOAT, GL_FALSE, 2*nElemVtx*sizeof(float), 0L);
+    glEnableVertexAttribArray(loc::vtxIdx);
+
+    glVertexAttribPointer(loc::colIdx, nElemVtx, GL_FLOAT, GL_FALSE, 2*nElemVtx*sizeof(float), (void *) (nElemVtx*sizeof(float)));
+    glEnableVertexAttribArray(loc::colIdx);
+#else
     glCreateVertexArrays(1, &vao);
     glCreateBuffers(1, &vaoBuffer);
     glNamedBufferStorage(vaoBuffer, sizeof(coloredCubeData), coloredCubeData, 0);
@@ -190,6 +193,8 @@ void initGL()
     glEnableVertexArrayAttrib(vao, loc::colIdx);
 
     glVertexArrayVertexBuffer(vao, 0, vaoBuffer, 0, 2*nElemVtx*sizeof(float));
+#endif
+
 
     glViewport(0, 0, width, height);
 
@@ -200,7 +205,9 @@ void initGL()
     glDepthFunc(GL_LESS);
     glFrontFace(GL_CW);
 
+#ifndef __EMSCRIPTEN__
     glDepthRange(-1.0, 1.0);
+#endif
     setScene();
 }
 
@@ -208,8 +215,14 @@ void initFramework()
 {
     glfwInit();
 
+#ifdef __EMSCRIPTEN__
+    // for EMS is necessary WebGL 2 compatibility
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#else
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+#endif
 
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
@@ -223,20 +236,19 @@ void initFramework()
     }
 
     glfwMakeContextCurrent(glfwWindow);
+
+#ifndef __EMSCRIPTEN__
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);  //get OpenGL extensions
+#endif
 
     glfwSetWindowSizeCallback(glfwWindow, glfwWindowSizeCallback);
-
-// vGizmo3D: Using Callbacks... more elegant method
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     glfwSetScrollCallback(glfwWindow, glfwScrollCallback);
-    glfwSetMouseButtonCallback(glfwWindow, glfwMouseButtonCallback);
-    glfwSetCursorPosCallback(glfwWindow, glfwMousePosCallback);
-
 
     glfwSwapInterval(1); // 0 vSync off - 1 vSync on
 }
 
+
+void mainLoop();
 
 /// vGizmo3D initialize: <br>
 /// set/associate mouse BUTTON IDs and KEY modifier IDs to vGizmo3D functionalities <br><br>
@@ -255,7 +267,7 @@ void initVGizmo3D()     // Settings to control vGizmo3D
         track.setGizmoSecondaryRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
     // Pan and Dolly/Zoom: mouse button and key modifier
         track.setDollyControl            (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
-        track.setPanControl              (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
+        track.setPanControl              (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier | vg::evSuperModifier);
     // N.B. vg::enums are ONLY mnemonic: select and pass specific vg::enum to framework (that can have also different IDs)
 
     // passing the screen sizes auto-set the mouse sensitivity
@@ -263,6 +275,7 @@ void initVGizmo3D()     // Settings to control vGizmo3D
     // track.setGizmoFeeling(1.0);              // 1.0 default,  > 1.0 more sensible, < 1.0 less sensible
 
     // setIdleRotSpeed(1.0)                     // If used Idle() feature (continue rotation on Idle) it set that speed: more speed > 1.0 ,  less < 1.0
+        track.setWheelScale(20);
 
     // other settings if you need it
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -299,23 +312,65 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     initVGizmo3D();
 
-    // other OpenGL settings... used locally
-    vec4 bgColor = vec4(0.0f);
-    GLfloat f=1.0f;
-
-
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(mainLoop,0,true);
+#else
     // main render/draw loop
-    while (!glfwWindowShouldClose(glfwWindow)) {
+    while (!glfwWindowShouldClose(glfwWindow)) mainLoop();
+#endif
+
+
+    // Cleanup OpenGL
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vaoBuffer);
+    glDeleteProgram(program);
+
+    // Cleanup Framework
+    glfwDestroyWindow(glfwWindow);
+    glfwTerminate();
+
+    return EXIT_SUCCESS;
+}
+
+void mainLoop()
+{
+    // other OpenGL settings... used locally
+        const vec4 bgColor = vec4(0.0f);
+        const GLfloat f=1.0f;
+
         glfwPollEvents();
         glClearBufferfv(GL_DEPTH, 0, &f);
         glClearBufferfv(GL_COLOR, 0, value_ptr(bgColor));
 
-    // vGizmo3D: Now we use Callbacks... more elegant method
+    // vGizmo3D: check changing button state to activate/deactivate drag movements (pressing together left/right activate/deactivate both)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        static int leftPress = 0, rightPress = 0, middlePress = 0;
+        double x, y;
+        glfwGetCursorPos(glfwWindow, &x, &y);
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_LEFT) != leftPress) {   // check if leftButton state is changed
+            leftPress = leftPress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) state
+            track.mouse(vg::evLeftButton, getModifier(glfwWindow),                  // send communication to vGizmo3D...
+                                          leftPress, x, y);                         // ... checking if a key modifier currently is pressed
+        }
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_RIGHT) != rightPress) { // same thing for rightButton
+            rightPress = rightPress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;
+            track.mouse(vg::evRightButton, getModifier(glfwWindow),
+                                           rightPress, x, y);
+        }
+        // Just a trik: simulating a double press (left+right button together) using MIDDLE button,
+        // sending two "consecutive" activation/deactivation calls to rotate cube and light spot together
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE) != middlePress) {   // check if middleButton state is changed
+            middlePress = middlePress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) middle button state
+            track.mouse(vg::evLeftButton, getModifier(glfwWindow),  middlePress, x, y); // call Left activation/deactivation with same "middleStatus"
+            track.mouse(vg::evRightButton, getModifier(glfwWindow), middlePress, x, y); // call Right activation/deactivation with same "middleStatus"
+        }
+    // vGizmo3D: if "drag" active update internal rotations (primary and secondary)
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        track.motion(x,y);
 
     // vGizmo3D: call it every rendering loop if you want a continue rotation until you do not click on screen
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        track.idle();   // set continuous rotation on Idle: the smooth rotation depends on speed of last mouse movements
+        track.idle();   // set continuous rotation on Idle: the slow rotation depends on speed of last mouse movement
                         // It can be adjusted from setIdleRotSpeed(1.0) > more speed, < less
                         // It can be stopped by click on screen (without mouse movement)
 
@@ -330,21 +385,10 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
         mvpMatrix   = projMatrix * viewMatrix * compensateView * translationMatrix * modelMatrix;
         lightMatrix = projMatrix * viewMatrix * compensateView * translationMatrix * (static_cast<mat4>(track.getSecondRot())) * lightObj;
 
-    // draw the cube, passing MVP matrix to the vtx shader
+    // draw the cube, passing matrices to the vtx shader
         draw();
 
+        glfwMakeContextCurrent(glfwWindow);
         glfwSwapBuffers(glfwWindow);
-    }
 
-
-    // Cleanup OpenGL
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vaoBuffer);
-    glDeleteProgram(program);
-
-    // Cleanup Framework
-    glfwDestroyWindow(glfwWindow);
-    glfwTerminate();
-
-    return EXIT_SUCCESS;
 }

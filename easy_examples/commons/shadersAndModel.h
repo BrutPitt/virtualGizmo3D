@@ -13,6 +13,8 @@
 #pragma once
 
 #define GLSL_VERSION "#version 450\n"
+#define WGL_VERSION "#version 300 es\n"
+
 const char* vertex_code = GLSL_VERSION R"(
 layout(std140) uniform;
 layout (location = 0) in vec4 pos;
@@ -41,8 +43,6 @@ layout (location = 3) uniform mat4 light;
 
 layout (location = 0) out vec4 outColor;
 
-out vec3 vsPos;
-
 void main()
 {
     if(gl_InstanceID==1) {
@@ -55,6 +55,47 @@ void main()
     }
 }
 )";
+
+const char* wgl_vertex_instanced = WGL_VERSION R"(
+precision highp float;
+precision highp int;
+
+layout(std140) uniform;
+layout (location = 0) in vec4 pos;
+layout (location = 1) in vec4 inColor;
+
+uniform mat4 mvp;
+uniform mat4 light;
+
+out vec4 vtxColor;
+
+void main()
+{
+    if(gl_InstanceID==1) {
+        vtxColor = inColor;
+        gl_Position = mvp * pos;
+    }
+    else {
+        vtxColor = vec4(1.0, 1.0, 0.5, 1.0);
+        gl_Position = light * pos ;
+    }
+}
+)";
+
+const char* wgl_fragment_code = WGL_VERSION R"(
+precision highp float;
+precision highp int;
+
+in vec4 vtxColor;
+out vec4 outColor;
+
+
+void main()
+{
+    outColor = vtxColor;
+}
+)";
+
 
 const char* vk_vertex_code = R"(
 #version 400

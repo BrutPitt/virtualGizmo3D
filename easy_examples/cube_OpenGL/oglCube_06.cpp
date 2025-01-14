@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 #include <cstdlib>
 #include <iostream>
+#include <cfloat>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -25,8 +26,8 @@
 int width = 1280, height = 800;
 GLFWwindow *glfwWindow;
 
-const int nVertex = sizeof(coloredCubeData)/(sizeof(float)*2);
-GLuint nElemVtx = 4;
+const int nElemVtx = 4;
+const size_t nVertex = sizeof(coloredCubeData)/(sizeof(float)*2*nElemVtx);
 
 // Shaders & Vertex attributes
 GLuint program, vao, vaoBuffer;
@@ -127,7 +128,7 @@ void initGL()
     GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vertex_instanced, NULL);
     glCompileShader(vertex);
-    glCompileShader(vertex);
+    checkShader(vertex);
 
     GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fragment_code, NULL);
@@ -202,7 +203,7 @@ void initFramework()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void initVGizmo3D()     // Settings to control vGizmo3D
 {
-    // Initialization are necessary to associate your preferences to vGizmo3D
+    // Initialization is necessary to associate your preferences to vGizmo3D
     // These are also the DEFAULT values, so if you want to maintain these combinations you can omit they
     // and to override only the associations that you want modify
         track.setGizmoRotControl         (vg::evButton1  /* or vg::evLeftButton */, 0 /* vg::evNoModifier */ );
@@ -268,9 +269,9 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
         glClearBufferfv(GL_DEPTH, 0, &f);
         glClearBufferfv(GL_COLOR, 0, value_ptr(bgColor));
 
-    // vGizmo3D: check changing button state to activate/deactivate drag movements
+    // vGizmo3D: check changing button state to activate/deactivate drag movements (pressing together left/right activate/deactivate both)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        static int leftPress = 0, rightPress = 0;
+        static int leftPress = 0, rightPress = 0, middlePress = 0;
         double x, y;
         glfwGetCursorPos(glfwWindow, &x, &y);
         if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_LEFT) != leftPress) {   // check if leftButton state is changed
@@ -282,6 +283,13 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
             rightPress = rightPress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;
             track.mouse(vg::evRightButton, getModifier(glfwWindow),
                                            rightPress, x, y);
+        }
+        // Just a trik: simulating a double press (left+right button together) using MIDDLE button,
+        // sending two "consecutive" activation/deactivation calls to rotate cube and light spot together
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE) != middlePress) {   // check if middleButton state is changed
+            middlePress = middlePress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) middle button state
+            track.mouse(vg::evLeftButton, getModifier(glfwWindow),  middlePress, x, y); // call Left activation/deactivation with same "middleStatus"
+            track.mouse(vg::evRightButton, getModifier(glfwWindow), middlePress, x, y); // call Right activation/deactivation with same "middleStatus"
         }
     // vGizmo3D: if "drag" active update internal rotations (primary and secondary)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

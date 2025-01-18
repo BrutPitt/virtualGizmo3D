@@ -21,7 +21,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // vGizmo3D:
-#include <vGizmo3D/vGizmo3D.h> // now also imguizmo_quat.h from v3.1
+#include <vGizmo3D.h>
 
 int width = 1280, height = 800;
 GLFWwindow *glfwWindow;

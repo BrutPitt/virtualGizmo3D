@@ -20,7 +20,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // vGizmo3D:
-#include <vGizmo3D/vGizmo3D.h> // now also vGizmo3D.h from v3.1
+#include <vGizmo3D.h> // now also vGizmo3D.h from v3.1
 
 int width = 1280, height = 800;
 SDL_Window *sdlWindow = nullptr;

@@ -58,20 +58,20 @@ else ()
     message (FATAL_ERROR "OPENGL not found... REQUIRED!!!!")
 endif(OPENGL_FOUND)
 
-find_package(glfw3 CONFIG)
-
-find_package(SDL2 CONFIG)
-include_directories(${SDL2_INCLUDE_DIRS})
-
 file( GLOB APP_SOURCES ${SRC}/oglCube*.cpp )
 foreach( oglCubeSourceFile ${APP_SOURCES} )
     get_filename_component( oglCubeName ${oglCubeSourceFile} NAME_WE )      # Cut off the file extension and directory path
         project(${oglCubeName})
 
     if(${oglCubeName} MATCHES "SDL")
+        find_package(SDL2 CONFIG)
+        include_directories(${SDL2_INCLUDE_DIRS})
+
         add_executable( ${oglCubeName} ${oglCubeSourceFile} ${SOURCE_FILES} ${SOURCE_FILES_SDL} ${SOURCE_FILES_GLAD} ${COMMONS_UI_FILES})
         target_link_libraries(${oglCubeName} ${SDL2_LIBRARIES})
     else()
+        find_package(glfw3 CONFIG)
+
         add_executable( ${oglCubeName} ${oglCubeSourceFile} ${SOURCE_FILES} ${SOURCE_FILES_GLFW} ${SOURCE_FILES_GLAD} ${COMMONS_UI_FILES})
         target_link_libraries(${oglCubeName} glfw)
     endif()

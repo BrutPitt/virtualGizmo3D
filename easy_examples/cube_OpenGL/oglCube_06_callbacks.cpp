@@ -258,9 +258,9 @@ void initVGizmo3D()     // Settings to control vGizmo3D
         track.setPanControl              (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
     // N.B. vg::enums are ONLY mnemonic: select and pass specific vg::enum to framework (that can have also different IDs)
 
-    // passing the screen sizes auto-set the mouse sensitivity
-        track.viewportSize(width, height);      // but if you need to more feeling with the mouse use:
-    // track.setGizmoFeeling(1.0);              // 1.0 default,  > 1.0 more sensible, < 1.0 less sensible
+    // passing the screen sizes calibrate drag rotation and auto-set the mouse sensitivity
+        track.viewportSize(width, height);      // is necessary also to call when resize window/surface: re-calibrate drag rotation & auto-set mouse sensitivity
+    // track.setGizmoFeeling(1.0);              // but if you need to more feeling with the mouse use: 1.0 default,  > 1.0 more sensible, < 1.0 less sensible
 
     // setIdleRotSpeed(1.0)                     // If used Idle() feature (continue rotation on Idle) it set that speed: more speed > 1.0 ,  less < 1.0
 

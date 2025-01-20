@@ -73,8 +73,8 @@ void initVGizmo3D()     // Settings to control vGizmo3D
     
     // N.B. vg::enums are ONLY mnemonic: select and pass specific vg::enum to framework (that can have also different IDs)
 
-    // passing the screen sizes to vGizmo3D: this auto-set the mouse sensitivity
-        track.viewportSize(width, height);      // call it ALSO on reshape to re-adjust mouse sensitivity
+    // passing the screen sizes calibrate drag rotation and auto-set the mouse sensitivity 
+        track.viewportSize(width, height);      // is necessary also to call when resize window/surface: re-calibrate drag rotation & auto-set mouse sensitivity
 }
 ```
 

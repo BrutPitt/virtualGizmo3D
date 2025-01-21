@@ -336,8 +336,8 @@ private:
     
     mat4 clipMatrix = mat4(1.0f,  0.0f, 0.0f, 0.0f,
                            0.0f, -1.0f, 0.0f, 0.0f,
-                           0.0f,  0.0f,-1.0f, 0.0f,
-                           0.0f,  0.0f, 1.0f, 1.0f );  // vulkan clip space has inverted y and half z !
+                           0.0f,  0.0f,  .5f, 0.0f,
+                           0.0f,  0.0f,  .5f, 1.0f );  // vulkan clip space: -y & half z
 
     mat4 viewMatrix, projMatrix;
     mat4 lightObj, cubeObj;

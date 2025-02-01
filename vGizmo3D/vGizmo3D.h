@@ -12,19 +12,58 @@
 //------------------------------------------------------------------------------
 #pragma once
 
-#define VGIZMO_H_FILE
-#include "vgMath.h"
+#include "vGizmo3D_config.h"
 
-#ifdef VGM_USES_TEMPLATE
+#define VGIZMO_H_FILE
+
+//#define VGIZMO_USES_GLM
+
+#ifdef VGIZMO_USES_GLM
+    #ifndef VGM_USES_TEMPLATE
+        #define VGM_USES_TEMPLATE    // glm uses template ==> vGizmo needs to know
+    #endif
+
+    #define VG_T_TYPE float
+
+    #include <glm/glm.hpp>
+    #include <glm/gtx/vector_angle.hpp>
+    #include <glm/gtx/exterior_product.hpp>
+    #include <glm/gtc/type_ptr.hpp>
+    #include <glm/gtc/quaternion.hpp>
+    #include <glm/gtc/matrix_transform.hpp>
+
+    using tVec2 = glm::tvec2<VG_T_TYPE>;
+    using tVec3 = glm::tvec3<VG_T_TYPE>;
+    using tVec4 = glm::tvec4<VG_T_TYPE>;
+    using tQuat = glm::tquat<VG_T_TYPE>;
+    using tMat3 = glm::tmat3x3<VG_T_TYPE>;
+    using tMat4 = glm::tmat4x4<VG_T_TYPE>;
+
+    #define T_PI glm::pi<VG_T_TYPE>()
+    #define T_INV_PI glm::one_over_pi<VG_T_TYPE>()
+
     #define VGIZMO_BASE_CLASS virtualGizmoBaseClass<T>
     #define imGuIZMO_BASE_CLASS virtualGizmoBaseClass<float>
-#else
-    #define VGIZMO_BASE_CLASS virtualGizmoBaseClass
-    #define imGuIZMO_BASE_CLASS VGIZMO_BASE_CLASS
-    #define T VG_T_TYPE
+    #define TEMPLATE_TYPENAME_T  template<typename T>
+
+    #if !defined(VGM_DISABLE_AUTO_NAMESPACE)
+        using namespace glm;
+    #endif
+
+#else // use vgMath
+    #include "vgMath.h"
+    #ifdef VGM_USES_TEMPLATE
+        #define VGIZMO_BASE_CLASS virtualGizmoBaseClass<T>
+        #define imGuIZMO_BASE_CLASS virtualGizmoBaseClass<float>
+    #else
+        #define VGIZMO_BASE_CLASS virtualGizmoBaseClass
+        #define imGuIZMO_BASE_CLASS VGIZMO_BASE_CLASS
+        #define T VG_T_TYPE
+    #endif
+    #if !defined(VGM_DISABLE_AUTO_NAMESPACE)
+        using namespace vgm;
+    #endif
 #endif
-
-
 
 typedef int vgButtons;
 typedef int vgModifiers;
@@ -79,7 +118,26 @@ public:
                                xRotationModifier(evShiftModifier),
                                yRotationModifier(evControlModifier),
                                zRotationModifier(evAltModifier|evSuperModifier)
-    { 
+    {
+#if defined(VGIZMO3D_FLIP_ROT_ON_X)
+        flipRotOnX();
+#endif
+#if defined(VGIZMO3D_FLIP_ROT_ON_Y)
+        flipRotOnY();
+#endif
+#if defined(VGIZMO3D_FLIP_ROT_ON_Z)
+        flipRotOnZ();
+#endif
+#if defined(VGIZMO3D_FLIP_PAN_X)
+        isFlipPanX = true;
+#endif
+#if defined(VGIZMO3D_FLIP_PAN_Y)
+        isFlipPanY = true;
+#endif
+#if defined(VGIZMO3D_FLIP_DOLLY)
+        isFlipDolly = true;
+#endif
+
         viewportSize(T(256), T(256));  //initial dummy value
     }
     virtual ~virtualGizmoBaseClass() {}
@@ -95,21 +153,12 @@ public:
 ///    // call on initialization and on window/viewport resize
 ///    track.viewportSize(width, height);
 ///@endcode
-    void viewportSize(T w, T h) {
+    virtual void viewportSize(T w, T h) {
         width = w; height = h; 
         minVal = T(width < height ? width*T(0.5) : height*T(0.5));
-        offset = tVec3(T(.5 * width), T(.5 * height), T(0));
+        offset = tVec3(T(0.5) * width, T(0.5) * height, T(0));
     }
 
-    void inline activateMouse(T x, T y) {
-        pos.x = x;
-        pos.y = y;
-        delta.x = delta.y = 0;
-    }
-    void inline deactivateMouse() {
-        if(delta.x == 0 && delta.y == 0) update();
-        delta.x = delta.y = 0;
-    }
     void inline testRotModifier(int x, int y, vgModifiers mod) { }
     
 /// Start/End mouse capture: call on mouse BUTTON event or on state change
@@ -130,11 +179,11 @@ public:
             tbActive = true;
             activateMouse(x,y);
         }
-        else if((button == tbSecControlButton) && pressed && (tbControlModifiers ? tbControlModifiers & mod : tbControlModifiers == mod) ) {
+        if((button == tbSecControlButton) && pressed && (tbSecControlModifiers ? tbSecControlModifiers & mod : tbSecControlModifiers == mod) ) {
             tbSecActive = true;
             activateMouse(x,y);
         }
-        else if ( (button == tbSecControlButton || button == tbControlButton) && !pressed) {
+        if ( (button == tbSecControlButton || button == tbControlButton) && !pressed) {
             deactivateMouse();
             tbActive    = false;
             tbSecActive = false;
@@ -161,7 +210,7 @@ public:
 ///        track.motion((int)x, (int)y);
 ///@endcode
     virtual void motion( T x, T y) {
-        delta.x = x - pos.x;   delta.y = pos.y - y;
+        delta.x = x - pos.x;   delta.y = y - pos.y;
         pos.x = x;   pos.y = y;
         update();
     }
@@ -180,48 +229,72 @@ public:
 ///@code
 ///     while (!glfwWindowShouldClose(glfwWindow)) {
 ///         ...
-///         track.idle();       // set continuous rotation on Idle
+///         track.idle();       // get continuous rotation on Idle
 ///@endcode
-    void idle() { qtRot = qtIdle*qtRot;  }
+    void idle()          { qtRot          = qtIdle*qtRot; }
+/// <b>Call in main render loop to implement a continue slow rotation for secondary trackball</b><br>
+/// <br>
+/// This rotation depends on speed of last mouse movements and maintains same spin <br>
+/// The speed can be adjusted from <b>setIdleRotSpeed(1.0)</b>
+/// It can be stopped by click on screen (without mouse movement)
+///@code
+///     while (!glfwWindowShouldClose(glfwWindow)) {
+///         ...
+///         track.idleSecond();  // get continuous rotation on Idle
+///@endcode
+    void idleSecond() { qtSecondRot = qtIdleSec*qtSecondRot; }
 
     //    Call after changed settings
     //--------------------------------------------------------------------------
     virtual void update() = 0;
     void updateGizmo()
     {
-        if(!delta.x && !delta.y) {
-            qtIdle = qtStep = tQuat(T(1), T(0), T(0), T(0)); //no rotation
+        if(delta.x == 0 && delta.y == 0) {
+            qtStep = tQuat(T(1), T(0), T(0), T(0)); //no rotation
+            qtStepSec = tQuat(T(1), T(0), T(0), T(0)); //no rotation
+            if(tbActive) qtIdle = tQuat(T(1), T(0), T(0), T(0));
+            if(tbSecActive) qtIdleSec = tQuat(T(1), T(0), T(0), T(0));
             return;
         }
 
-        tVec3 a(T(pos.x-delta.x), T(height - (pos.y+delta.y)), T(0));
-        tVec3 b(T(pos.x    ),     T(height -  pos.y         ), T(0));
+        tVec3 a(T(pos.x-delta.x), T(pos.y-delta.y), T(0));
+        tVec3 b(T(pos.x        ), T(pos.y        ), T(0));
 
         auto vecFromPos = [&] (tVec3 &v) {
             v -= offset;
             v /= minVal;
             const T len = length(v);
             v.z = len>T(0) ? pow(T(2), -T(.5) * len) : T(1);
-            v = normalize(v);
+            return normalize(v);
         };
 
-        vecFromPos(a);
-        vecFromPos(b);
+        a = vecFromPos(a);
+        b = vecFromPos(b);
 
-        tVec3 axis = cross(a, b);
-        axis = normalize(axis);
+        tVec3 axis = normalize(cross(a, b));
 
         T AdotB = dot(a, b);
-        T angle = acos( AdotB>T(1) ? T(1) : (AdotB<-T(1) ? -T(1) : AdotB)); // clamp need!!! corss float is approximate to FLT_EPSILON
+        T angle = acos( AdotB>T(1) ? T(1) : (AdotB<-T(1) ? -T(1) : AdotB)); // clamp necessary!!! corss float is approximate to FLT_EPSILON
 
-        qtStep = normalize(angleAxis(angle * tbScale * fpsRatio , axis * rotationVector));
+        auto flipRotation = [=] (quat q) {
+            return quat(q.w, rotOnX * q.x, rotOnY * q.y, rotOnZ * -q.z);
+        };
+
+        auto getNormalizedQuat = [&] (float factor = T(1)) {
+            return normalize(angleAxis(angle * tbScale * fpsRatio * factor, axis * rotationVector));
+        };
+
 
         if(tbActive) {
-            qtIdle = normalize(angleAxis(angle * tbScale * fpsRatio * qIdleSpeedRatio, axis * rotationVector));
+            qtStep = flipRotation(getNormalizedQuat());
+            qtIdle = flipRotation(getNormalizedQuat(qIdleSpeedRatio * qIdleReduction));
             qtRot = qtStep*qtRot;
         }
-        if(tbSecActive)
-            qtSecondaryRot = qtStep*qtSecondaryRot;
+        if(tbSecActive) {
+            qtStepSec = flipRotation(getNormalizedQuat());
+            qtIdleSec = flipRotation(getNormalizedQuat(qIdleSpeedRatio * qIdleReduction));
+            qtSecondRot = qtStepSec*qtSecondRot;
+        }
     }
 
 ///  Set the mouse sensitivity for vGizmo3D
@@ -257,7 +330,7 @@ public:
 ///    track.setGizmoRotZControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
 ///
 ///    // Set vGizmo3D control for secondary rotation
-///    track.setGizmoSecondaryRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
+///    track.setGizmoSecondRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
 ///
 ///    // Pan and Dolly/Zoom: mouse button and key modifier
 ///    track.setDollyControl            (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
@@ -285,14 +358,14 @@ public:
 ///    track.setGizmoRotZControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
 ///
 ///    // Set vGizmo3D control for secondary rotation
-///    track.setGizmoSecondaryRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
+///    track.setGizmoSecondRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
 ///
 ///    // Pan and Dolly/Zoom: mouse button and key modifier
 ///    track.setDollyControl            (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
 ///    track.setPanControl              (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
 ///@endcode
 ///@note the example values are also DEFAULT values: you can omit to set they and to override only the associations that you want modify
-    void setGizmoSecondaryRotControl( vgButtons b, vgModifiers m = evNoModifier) {
+    void setGizmoSecondRotControl( vgButtons b, vgModifiers m = evNoModifier) {
         tbSecControlButton = b;
         tbSecControlModifiers = m;
     }
@@ -358,18 +431,18 @@ public:
 /// Returns the reference to quaternion containing current vGizmo3D rotation
 /// @retval quat& : reference to vGizmo3D quaternion containing actual rotation
 /// to acquire and modify, very useful to use directly in ImGuUIZMO_quat
-    virtual tQuat &getRotationRef() { return qtRot; }
+    virtual tQuat &refRotation() { return qtRot; }
 
 /// Returns the quaternion containing current vGizmo3D secondary
 /// rotation (usually used to rotate light)
 /// @retval quat : quaternion contain actual rotation */
-    virtual tQuat getSecondRot() { return qtSecondaryRot; }
+    virtual tQuat getSecondRot() { return qtSecondRot; }
 
 /// Returns the reference to quaternion containing current vGizmo3D secondary
 /// rotation (usually used to rotate light)
 /// @retval quat& : reference to vGizmo3D quaternion containing actual rotation
 /// to acquire and modify, very useful to use directly in ImGuUIZMO_quat  */
-    virtual tQuat &getSecondRotRef() { return qtSecondaryRot; }
+    virtual tQuat &refSecondRot() { return qtSecondRot; }
 
 
 /// Set current rotation of vGizmo3D
@@ -378,7 +451,45 @@ public:
 
 /// Set current rotation of vGizmo3D
 ///@param[in] q quat& : reference quaternion containing rotation to set
-    void setSecondRot(const tQuat &q) { qtSecondaryRot = q; }
+    void setSecondRot(const tQuat &q) { qtSecondRot = q; }
+
+/// flip X Rot
+///@param[in] b bool
+    void flipRotOnX(bool b = true) { rotOnX = b ? -T(1) : T(1); }
+/// flip Y Rot
+///@param[in] b bool
+    void flipRotOnY(bool b = true) { rotOnY = b ? -T(1) : T(1); }
+/// flip Z Rot
+///@param[in] b bool
+    void flipRotOnZ(bool b = true) { rotOnZ = b ? -T(1) : T(1); }
+/// flip Dolly mouse coord
+///@param[in] b bool
+    void setFlipDolly(bool b) { isFlipDolly = b; }
+/// flip Pan X mouse coord
+///@param[in] b bool
+    void setFlipPanX(bool b) { isFlipPanX = b; }
+/// flip Pan Y mouse coord
+///@param[in] b bool
+    void setFlipPanY(bool b) { isFlipPanY = b; }
+
+/// get flip Rot X status
+/// @retval bool : current flip Rot X status
+    bool getFlipRotOnX() { return rotOnX < 0; }
+/// get flip Rot Y status
+/// @retval bool : current flip Rot Y status
+    bool getFlipRotOnY() { return rotOnY < 0; }
+/// get flip Rot Z status
+/// @retval bool : current flip Rot Z status
+    bool getFlipRotOnZ() { return rotOnZ < 0; }
+/// get flip Pan X status
+/// @retval bool : current flip Pan X status
+    bool getFlipPanX() { return isFlipPanX; }
+/// get flip Pan Y status
+/// @retval bool : current flip Pan Y status
+    bool getFlipPanY() { return isFlipPanY; }
+/// get flip Dolly status
+/// @retval bool : current flip Dolly status
+    bool getFlipDolly() { return isFlipDolly; }
 
     // attenuation<1.0 / increment>1.0 of rotation speed in idle
     //--------------------------------------------------------------------------
@@ -398,7 +509,7 @@ public:
     //////////////////////////////////////////////////////////////////
     void motionImmediateLeftButton( T x, T y, T dx, T dy) {
         tbActive = true;
-        delta = tVec2(dx,-dy);
+        delta = tVec2(dx, dy);
         pos   = tVec2( x,  y);
         update();
     }
@@ -406,7 +517,7 @@ public:
     //////////////////////////////////////////////////////////////////
     virtual void motionImmediateMode( T x, T y, T dx, T dy,  vgModifiers mod) {
         tbActive = true;
-        delta = tVec2(dx,-dy);
+        delta = tVec2(dx, dy);
         pos   = tVec2( x,  y);
         if      (xRotationModifier & mod) { rotationVector = tVec3(T(1), T(0), T(0)); }
         else if (yRotationModifier & mod) { rotationVector = tVec3(T(0), T(1), T(0)); }
@@ -414,13 +525,27 @@ public:
         update();
     }
 protected:
-    //  get the rotation increment
+    void inline activateMouse(T x, T y) {
+        pos.x = x;
+        pos.y = y;
+        delta.x = delta.y = 0;
+    }
+    void inline deactivateMouse() {
+        if(delta.x == 0 && delta.y == 0) update();
+        delta.x = delta.y = 0;
+    }
+    //  set the rotation increment
     //////////////////////////////////////////////////////////////////
     void setStepRotation(const tQuat &q) { qtStep = q; }
+    void setStepSecondRot(const tQuat &q) { qtStepSec = q; }
     //  get the rotation increment
     //////////////////////////////////////////////////////////////////
     tQuat getStepRotation() { return qtStep; }
+    tQuat getStepSecondRot() { return qtStepSec; }
 
+    T panFlipX(T x)  { return isFlipPanX  ?         -x : x; }
+    T panFlipY(T y)  { return isFlipPanY  ?         -y : y; }
+    T dollyFlip(T z) { return isFlipDolly ?         -z : z; }
 
     tVec2 pos {0} , delta {0};
 
@@ -432,9 +557,11 @@ protected:
     //tVec3 rotationVector = tVec3(T(1));
 
     tQuat qtRot          = tQuat(T(1), T(0), T(0), T(0));
-    tQuat qtSecondaryRot = tQuat(T(1), T(0), T(0), T(0));
+    tQuat qtSecondRot    = tQuat(T(1), T(0), T(0), T(0));
     tQuat qtStep         = tQuat(T(1), T(0), T(0), T(0));
+    tQuat qtStepSec      = tQuat(T(1), T(0), T(0), T(0));
     tQuat qtIdle         = tQuat(T(1), T(0), T(0), T(0));
+    tQuat qtIdleSec      = tQuat(T(1), T(0), T(0), T(0));
 
 
 #ifdef BACKEND_IS_VULKAN
@@ -450,7 +577,8 @@ protected:
     //////////////////////////////////////////////////////////////////
     T tbScale = T(1);    //base scale sensibility
     T fpsRatio = T(1);   //auto adjust by FPS (call idle with current FPS)
-    T qIdleSpeedRatio = T(.33); //autoRotation factor to speedup/slowdown
+    T qIdleSpeedRatio = T(1); //autoRotation factor to speedup/slowdown
+    const T qIdleReduction = T(.25); //autoRotation factor to speedup/slowdown
     
     T minVal;
     tVec3 offset;
@@ -458,7 +586,10 @@ protected:
     bool tbActive    = false;  // trackbal activated via mouse
     bool tbSecActive = false;
 
-    T width, height;
+    T rotOnX {1},  rotOnY = {1}, rotOnZ = {1};
+    bool isFlipPanX = false, isFlipPanY = false, isFlipDolly = false;
+
+    T width {640}, height {320}; // init to dummy values
 };
 
 /// vGizmo / virtualGizmo 2D class
@@ -470,7 +601,7 @@ public:
     [[deprecated("Use virtualGizmo3D / vGizmo3D instead.")]] virtualGizmoClass()  { }
 
     //////////////////////////////////////////////////////////////////
-    void motion( T x, T y) { if(this->tbActive) VGIZMO_BASE_CLASS::motion(x,y); }
+    void motion( T x, T y) { if(this->tbActive || this->tbSecActive ) VGIZMO_BASE_CLASS::motion(x,y); }
 
     //////////////////////////////////////////////////////////////////
     void update() { this->updateGizmo(); }
@@ -498,7 +629,7 @@ public:
     //void setGizmoScale( T scale) { scale = scale; }
 
     // get the rotation quaternion
-    tQuat &getRotationRef() { return this->qtRot; }
+    tQuat &refRotation() { return this->qtRot; }
 };
 
 //--------------------------------------------------------------------
@@ -542,7 +673,7 @@ public:
             this->deactivateMouse();
             dollyActive = false;
         }
-        
+
         if ( button == panControlButton && pressed && (panControlModifiers ? panControlModifiers & mod : panControlModifiers == mod) ) {
             panActive = true;
             this->activateMouse(x,y);
@@ -551,32 +682,35 @@ public:
             this->deactivateMouse();
             panActive = false;
         }
+
+        //if(!panActive || !dollyActive)
     }
 
     //    Call on wheel (only for Dolly/Zoom)
     //--------------------------------------------------------------------------
     void wheel( T x, T y, T z=T(0)) {
-        povPanDollyFactor = z;
-        vecPanDolly.z += y * dollyScale * wheelScale * (povPanDollyFactor>T(0) ? povPanDollyFactor : T(1));
+        povPanDollyFactor = abs(z) * distScale * constDistScale;;
+        vecPanDolly.z += (y * dollyScale * wheelScale * (povPanDollyFactor>T(0) ? povPanDollyFactor : T(1)));
     }
 
     //////////////////////////////////////////////////////////////////
     //void motion( int x, int y, T z=T(0)) { motion( T(x), T(y), z); }
     void motion( T x, T y, T z=T(0)) {
-        povPanDollyFactor = z;
-        if( this->tbActive || this->tbSecActive || dollyActive || panActive) VGIZMO_BASE_CLASS::motion(x,y);
+        povPanDollyFactor = abs(z) * distScale * constDistScale;
+        if( this->tbActive || this->tbSecActive) VGIZMO_BASE_CLASS::motion(x, y);
+        else if(panActive || dollyActive)        VGIZMO_BASE_CLASS::motion(x, y);
     }
 
     //////////////////////////////////////////////////////////////////
     void updatePan() {
         const T pdFactor = (povPanDollyFactor>T(0) ? povPanDollyFactor : T(1));
-        vecPanDolly.x += delta.x * panScale * pdFactor;
-        vecPanDolly.y += delta.y * panScale * pdFactor;
+        vecPanDolly.x += this->panFlipX(delta.x) * panScale * pdFactor * constPanDollyScale.x;
+        vecPanDolly.y += this->panFlipY(delta.y) * panScale * pdFactor * constPanDollyScale.y;
     }
 
     //////////////////////////////////////////////////////////////////
     void updateDolly() {
-        vecPanDolly.z -= delta.y * dollyScale * (povPanDollyFactor>T(0) ? povPanDollyFactor : T(1));
+        vecPanDolly.z += this->dollyFlip(delta.y) * dollyScale * constPanDollyScale.z * (povPanDollyFactor>T(0) ? povPanDollyFactor : T(1));
     }
 
     //////////////////////////////////////////////////////////////////
@@ -644,10 +778,8 @@ public:
         panControlButton = b;
         panControlModifiers = m;
     }
-    int getPanControlButton() { return panControlButton; }
+    int getPanControlButton()   { return panControlButton; }
     int getPanControlModifier() { return panControlModifiers; }
-
-
 
     /// Set mouse wheel sensitivity (in %) for Dolly movements
     /// @param[in]  T scale : sensitivity ==> less < 100 < more
@@ -665,50 +797,53 @@ public:
     /// @param[in]  T scale : sensitivity ==> less < 100 < more
     /// @deprecated will removed on next version: use <b>setPanScale(T scale)</b>
     [[deprecated("Use setDollyScale(T scale) instead.")]]
-    void setNormalizedDollyScale(T scale) { dollyScale = scale*constDollyScale;  }
+    void setNormalizedDollyScale(T scale) { dollyScale = scale*constPanDollyScale.z;  }
 
     /// Get current mouse sensitivity (in %) for Dolly movements
     /// @retval  T scale : sensitivity ==> less < 100 < more
     /// @deprecated will removed on next version: use <b>getPanScale()>/b>
     [[deprecated("Use getDollyScale() instead.")]]
-    T getNormalizedDollyScale() { return dollyScale/constDollyScale;  }
+    T getNormalizedDollyScale() { return dollyScale/constPanDollyScale.z;  }
 
 
     /// Set mouse sensitivity (in %) for Pan movements
     /// @param[in]  T scale : sensitivity ==> less < 100 < more
     /// @deprecated will removed on next version: use <b>setPanScale(T scale)</b>
     [[deprecated("Use setPanScale(T scale) instead.")]]
-    void setNormalizedPanScale(T scale) { panScale = scale*constPanScale; }
+    void setNormalizedPanScale(T scale) { panScale = scale*constPanDollyScale.x; }
 
     /// Get current mouse sensitivity (in %) for Pan movements
     /// @retval  T scale : sensitivity ==> less < 100 < more
     /// @deprecated will removed on next version: use <b>getPanScale()</b>
     [[deprecated("Use getPanScale() instead.")]]
-    T getNormalizedPanScale() { return panScale/constPanScale; }
+    T getNormalizedPanScale() { return panScale/constPanDollyScale.x; }
 
     /// Set mouse wheel sensitivity for Dolly movements
     /// @param[in]  T scale : sensitivity ==> less < 1.0 < more
-    void setWheelScale( T scale)           { wheelScale = scale;  }
+    void setWheelScale( T scale) { wheelScale = scale;  }
 
     /// Get current mouse sensitivity for Dolly movements
     /// @retval  T scale : sensitivity ==> less < 1.0 < more
-    T getWheelScale()           { return wheelScale;  }
+    T getWheelScale() { return wheelScale;  }
 
     /// Set mouse sensitivity for Dolly movements
     /// @param[in]  T scale : sensitivity ==> less < 1.0 < more
-    void setDollyScale( T scale)           { dollyScale = scale;  }
+    void setDollyScale( T scale) { dollyScale = scale;  }
 
     /// Get current mouse sensitivity for Dolly movements
     /// @retval  T scale : sensitivity ==> less < 1.0 < more
-    T getDollyScale()           { return dollyScale;  }
+    T getDollyScale() { return dollyScale;  }
 
     /// Set mouse sensitivity for Pan movements
     /// @param[in]  T scale : sensitivity ==> less < 1.0 < more
-    void setPanScale( T scale)           { panScale = scale; }
+    void setPanScale( T scale) { panScale = scale; }
 
     /// Get current mouse sensitivity for Pan movements
     /// @retval  T scale : sensitivity ==> less < 1.0 < more
-    T getPanScale()           { return panScale; }
+    T getPanScale() { return panScale; }
+
+    void setDistScale( T scale) { distScale = scale; }
+    T getDistScale()            { return distScale; }
 
 
     //  Set the Dolly to a specified distance.
@@ -731,7 +866,7 @@ public:
     //  Get Pan (xy) & Dolly (z) position
     //////////////////////////////////////////////////////////////////
     tVec3 getPosition() { return vecPanDolly; }
-    tVec3 &getPositionRef() { return vecPanDolly; }
+    tVec3 &refPosition() { return vecPanDolly; }
     void  setPosition(const tVec3 &pos) { vecPanDolly = pos; }
 
     bool isDollyActive() { return dollyActive; }
@@ -739,11 +874,17 @@ public:
 
     void motionImmediateMode( T x, T y, T dx, T dy,  vgModifiers mod) {
         this->tbActive = true;
-        this->delta = tVec2(dx,-dy);
-        this->pos   = tVec2( x,  y);
-        if (dollyControlModifiers & mod) dollyActive = true;
-        else if (panControlModifiers & mod) panActive = true;
+        this->delta = tVec2(dx,dy);
+        this->pos   = tVec2(x, y);
+        if (dollyControlModifiers & mod)    dollyActive = true;
+        else if (panControlModifiers & mod) panActive   = true;
         update();
+    }
+
+    void viewportSize(T w, T h) {
+        VGIZMO_BASE_CLASS::viewportSize(w, h);
+        const T y = T(10) / h;
+        constPanDollyScale = tVec3(T(10) / h, y, y);
     }
 
 private:
@@ -757,13 +898,15 @@ private:
 
     tVec3 vecPanDolly = tVec3(T(0));
 
-    const T constDollyScale = T(.01);
-    const T constPanScale   = T(.01);  //pan scale
-    const T constWheelScale = T(7.5);  //dolly multiply for wheel step
+    // dummy starting vaalue (binding to viewport size call)
+    T constWheelScale    = T(20);  //dolly multiply for wheel step
+    tVec3 constPanDollyScale  = tVec3 (.05);  //pan scale
+    const T constDistScale  = T( .01);  //speed by distance sensibility
 
-    T dollyScale = constDollyScale;  //dolly scale
-    T panScale   = constPanScale  ;  //pan scale
-    T wheelScale = constWheelScale;  //dolly multiply for wheel step
+    T dollyScale = T(1.0);  //dolly scale
+    T panScale   = T(1.0);  //pan scale
+    T wheelScale = T(1.0);  //dolly multiply for wheel step
+    T distScale  = T(1.0);  //speed by distance sensibility
 
     T povPanDollyFactor = T(0); // internal use, maintain memory of current distance (pan/zoom speed by distance)
 };

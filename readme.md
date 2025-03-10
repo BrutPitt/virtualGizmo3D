@@ -1,4 +1,4 @@
-# vGizmo3D / virtualGizmo3D &nbsp;v3.1 beta
+# vGizmo3D / virtualGizmo3D &nbsp;v4.0 beta
 **vGizmo3D** / **virtualGizmo3D** is an 3D GIZMO manipulator: like a trackball it provides a way to rotate, move and scale a model, with mouse, also with dolly and pan features
 You can also define a way to rotate the model around any single axis.
 It use mouse movement on screen, mouse buttons and (eventually) key modifiers, like *Shift/Ctrl/Alt/Super*, that you define
@@ -22,18 +22,27 @@ If need a larger/complete library, as alternative to **virtualGizmo3D**, is also
 
 
 
-### Live WebGL2 examples
+### Live WebGL2 / WebGPU examples
 You can run/test an emscripten WebGL 2 example of **virtualGismo3D** from following link:
 - [vGizmo3D v2.0 WebGL2](https://www.michelemorrone.eu/emsExamples/oglGizmo.html)
-- [vGizmo3D v3.1 WebGL2 - easy_cube example](https://brutpitt.github.io/myRepos/vGizmo3D/wglCubeExamples.html)
+- [vGizmo3D v3.99 WebGL2 - easy_cube example](https://brutpitt.github.io/myRepos/vGizmo3D/wglCubeExamples.html)
+- [vGizmo3D v3.99 WebGL2 - LighedCube example](https://brutpitt.github.io/myRepos/vGizmo3D/wglLightCube.html)
 
-It works only on browsers with **WebGl2** and *webAssembly* support (FireFox/Opera/Chrome and Chromium based): test if your browser supports **WebGL2**, here: [WebGL2 Report](http://webglreport.com/?v=2)
+**is necessary to use a browser with **WebGl2** capabilities:: test if your browser supports **WebGL2**, here: [WebGL2 Report](http://webglreport.com/?v=2)*
+
+- [vGizmo3D v3.99 **WGPU / WebGPU** - easy_cube example](https://brutpitt.github.io/myRepos/vGizmo3D/wgpuCube/vGizmo3D_wgpuCube.html)
+
+**is necessary to use a browser with **WebGPU** capabilities: e.g. Chrome-Canary, FireFox Nightly, Safari Technology Preview ...*
+
+
+
 
 <p>&nbsp;<br></p>
 
 ## How to use vGizmo3D in your code
 
-*The following code is taken from the new [easy_examples](https://github.com/BrutPitt/virtualGizmo3D/tree/master/easy_examples)*
+
+- The following code is taken from the new [easy_examples](https://github.com/BrutPitt/virtualGizmo3D/tree/master/easy_examples)
 
 To use **vGizmo3D** need to include `vGizmo3D.h` or `vGizmo.h` file in your code and declare an object of type `vGizmo3D`, global, static or as member of class
 
@@ -296,6 +305,10 @@ Helper `typedef` are also defined:
     using vGizmo    = virtualGizmoClass;    // deprecated
     using vGizmo3D  = virtualGizmo3DClass;
 ```
+
+#### Ortho projection
+- *For the `Ortho` projection example view this [issue: how to use](https://github.com/BrutPitt/virtualGizmo3D/issues/4#issuecomment-2721634222)*
+
 <p>&nbsp;<br></p>
 
 ## Configure virtualGizmo3D

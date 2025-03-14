@@ -1,0 +1,47 @@
+# vGizmo3D - WGPU / WebGPU example
+
+This is a easy example that use **WebGPU** as graphics backend .
+It was written in C++ and can be compiled in native mode (for a standalone desktop application) or with EMSCRIPTEN to perform it via the web browser
+
+
+
+- [vGizmo3D v3.99 **WGPU / WebGPU** - easy_cube example](https://brutpitt.github.io/myRepos/vGizmo3D/wgpuCube/vGizmo3D_wgpuCube.html)
+
+**is necessary to use a browser with **WebGPU** capabilities: e.g. Chrome-Canary, FireFox Nightly, Safari Technology Preview ...*
+
+This example use Google DAWN (as WGPU SDK) to build native executable (CMakeLists.txt). 
+
+
+## How to Build                 
+
+It's necessary to have installed **GLFW** (development package) and python3 (Google DAWN requires)
+
+### Native - Desktop application
+
+- clone Google DAWN (WGPU SDK): `git clone https://dawn.googlesource.com/dawn`
+- Install Ninja build system (DAWN requires)
+- from/inside `cube_WGPU` folder type: `cmake -B build -DCURRENT_DAWN_DIR=path/where/cloned/dawn` (absolute or relative path) 
+- then `cmake --build build`
+
+### Emscripten - Web Browser application (WASM)
+
+- Install Emscripten SDK following the instructions: https://emscripten.org/docs/getting_started/downloads.html
+- Install Ninja build system 
+- `emcmake cmake -G Ninja -B build`
+- `cmake --build build`
+
+then
+
+- `emrun build/wgpu_mandelbrot.html`
+
+or
+
+- `python -m http.server` (in `build` folder)... then open WGPU browser with url: http://localhost:8000/wgpu_mandelbrot.html
+
+
+
+
+
+
+
+

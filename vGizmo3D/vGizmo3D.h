@@ -23,6 +23,8 @@
         #define VGM_USES_TEMPLATE    // glm uses template ==> vGizmo needs to know
     #endif
 
+    #define GLM_ENABLE_EXPERIMENTAL
+
     #define VG_T_TYPE float
 
     #include <glm/glm.hpp>
@@ -276,7 +278,7 @@ public:
         T AdotB = dot(a, b);
         T angle = acos( AdotB>T(1) ? T(1) : (AdotB<-T(1) ? -T(1) : AdotB)); // clamp necessary!!! corss float is approximate to FLT_EPSILON
 
-        auto flipRotation = [=] (quat q) {
+        auto flipRotation = [&] (quat q) {
             return quat(q.w, rotOnX * q.x, rotOnY * q.y, rotOnZ * -q.z);
         };
 

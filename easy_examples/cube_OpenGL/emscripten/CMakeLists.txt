@@ -36,7 +36,8 @@ set(SOURCE_FILES
         ${SRC}/oglDebug.h
         ${VGIZMO_DIR}/vGizmo3D.h
         ${VGIZMO_DIR}/vgMath.h
-        ${VGIZMO_DIR}/vgConfig.h
+        ${VGIZMO_DIR}/vGizmo3D_config.h
+        ${VGIZMO_DIR}/vgMath_config.h
         ${COMMONS_DIR}/shadersAndModel.h)
 
 set(SOURCE_FILES_GLAD

@@ -44,8 +44,8 @@ public:
     virtual bool createSurface(const vk::Instance &instance, vk::SurfaceKHR *surface) = 0;
     virtual bool pollEvents() = 0;
     virtual void getFramebufferSize(int *w, int *h) const = 0;
-    virtual int  getModifier() = 0;
-    virtual void checkGizmoMouseEvent(vg::vGizmo3D &vgTrackball) = 0;
+    virtual int  getVGizmo3DKeyModifier() = 0;
+    virtual void checkVGizmo3DMouseEvent(vg::vGizmo3D &vgTrackball) = 0;
 
     void getVulkanFramebufferSize(int *w, int *h) const;
     vk::Extent2D getVulkanFramebufferSize() const;
@@ -94,8 +94,8 @@ public:
 
 /// vGizmo3D: Check key modifier currently pressed (GLFW version)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    int getModifier();
-    void checkGizmoMouseEvent(vg::vGizmo3D &vgTrackball);
+    int getVGizmo3DKeyModifier();
+    void checkVGizmo3DMouseEvent(vg::vGizmo3D &vgTrackball);
 
 
     [[nodiscard]] SDL_Window* getWindow() const { return (SDL_Window*) window; }
@@ -175,8 +175,8 @@ public:
 
 /// vGizmo3D: Check key modifier currently pressed (GLFW version)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    int getModifier();
-    void checkGizmoMouseEvent(vg::vGizmo3D &vgTrackball);
+    int getVGizmo3DKeyModifier();
+    void checkVGizmo3DMouseEvent(vg::vGizmo3D &vgTrackball);
 
     // callbacks
     /////////////////////////////////////////////

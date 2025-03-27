@@ -259,7 +259,6 @@ protected:
     }
     // VK Data
     vk::Format surfaceFormat = vk::Format::eB8G8R8A8Unorm;  // preselected simple surface format
-    vk::CompareOp compareOp = vk::CompareOp::eLessOrEqual;  // depth buffer compare OP
     uint32_t vertexStride { sizeof( coloredCubeData[0] ) };
     std::vector<std::pair<vk::Format, uint32_t>> vertexInputAttributeFormatOffset { { vk::Format::eR32G32B32A32Sfloat, 0 }, { vk::Format::eR32G32B32A32Sfloat, 16 } };
 
@@ -333,11 +332,6 @@ private:
         mat4 mvpMatrix;
         mat4 lightMatrix;
     } uboMat;
-    
-    mat4 clipMatrix = mat4(1.0f,  0.0f, 0.0f, 0.0f,
-                           0.0f, -1.0f, 0.0f, 0.0f,
-                           0.0f,  0.0f,  .5f, 0.0f,
-                           0.0f,  0.0f,  .5f, 1.0f );  // vulkan clip space: -y & half z
 
     mat4 viewMatrix, projMatrix;
     mat4 lightObj, cubeObj;
@@ -351,3 +345,137 @@ private:
                               // have rotations & Pan/Dolly position variables inside to use with imGuIZMO.quat
                               // And it's necessary if you want use also direct-screen manipulator
 };
+
+
+//////////////////////////////////////////////////////////////////////
+// Possible 3D (clipMatrix) spaces ==> Use ONLY ONE of the following
+
+#define APP_HAS_NEG_Y
+#if defined(APP_HAS_NEG_Y)
+    mat4 clipMatrix = mat4(1.0f,  0.0f, 0.0f, 0.0f,
+                           0.0f, -1.0f, 0.0f, 0.0f,
+                           0.0f,  0.0f,  .5f, 0.0f,
+                           0.0f,  0.0f,  .5f, 1.0f );  // vulkan clip space: -y & half z
+
+    // +Z set depthBufferCompareOp = vk::CompareOp::eLessOrEqual    and depthBufferClearValue = 1.0
+    vk::CompareOp depthBufferCompareOp = vk::CompareOp::eLessOrEqual;  // of vk::PipelineDepthStencilStateCreateInfo
+    const float depthBufferClearValue  = 1.0;                          // "depth" value of vk::ClearDepthStencilValue
+
+    #define PERSPECTIVE perspectiveRH_ZO // RightHanded space and Z-Buffer [0,1] ==> default "prespective" (both GLM/vgMath) is set to perspectiveRH_NO
+    #define LOOK_AT     lookAt           // default "looAt" (both GLM/vgMath) is set to lookAtRH ==> !!! you can change ALL defaults in vgMath_config or in GLM (if use it) !!!
+    // the defautl values can be changed in vgConfig.h
+
+    auto vertCode = vk_vertex_instanced;
+    auto fragCode = fragment_code;
+
+    // No rotation changes
+    #define APP_FLIP_ROT_X
+    #define APP_FLIP_ROT_Y
+    #define APP_FLIP_ROT_Z
+    #define APP_FLIP_PAN_X
+    #define APP_FLIP_ROT_Y
+    #define APP_FLIP_PAN_Y
+    #define APP_FLIP_DOLLY
+    #define APP_REVERSE_AXES
+#endif
+
+//#define APP_HAS_NEG_YZ
+#if defined(APP_HAS_NEG_YZ)
+    mat4 clipMatrix = mat4(1.0f,  0.0f, 0.0f, 0.0f,
+                           0.0f, -1.0f, 0.0f, 0.0f,
+                           0.0f,  0.0f,-1.0f, 0.0f,
+                           0.0f,  0.0f, 1.0f, 1.0f );  // vulkan clip space: -y & -z
+
+    #define PERSPECTIVE perspectiveRH_ZO // RightHanded space and Z-Buffer [0,1] ==> default "prespective" (both GLM/vgMath) is set to perspectiveRH_NO
+    #define LOOK_AT     lookAt             // default "looAt" (both GLM/vgMath) is set to lookAtRH ==> !!! you can change ALL defaults in vgMath_config or in GLM (if use it) !!!
+    // the defautl values can be changed vgMath_config (vgMath) or in GLM (if use it) !!!
+
+    // -Z set depthBufferCompareOp = vk::CompareOp::eGreaterOrEqual and depthBufferClearValue = 0.0
+    vk::CompareOp depthBufferCompareOp = vk::CompareOp::eGreaterOrEqual;    // of vk::PipelineDepthStencilStateCreateInfo
+    const float depthBufferClearValue  = 0.0;                               // "depth" value of vk::ClearDepthStencilValue
+
+    auto vertCode = vk_vertex_instanced;
+    auto fragCode = fragment_code;
+
+    // No rotation changes
+    #define APP_FLIP_ROT_X
+    #define APP_FLIP_ROT_Y
+    #define APP_FLIP_ROT_Z
+    #define APP_FLIP_PAN_X
+    #define APP_FLIP_PAN_Y
+    #define APP_FLIP_DOLLY
+    #define APP_REVERSE_AXES
+#endif
+
+    ///////////////////////////////////
+    // Another / Alternative method
+//#define APP_HAS_NEG_YZ_FRAG_DEPTH
+#if defined(APP_HAS_NEG_YZ_FRAG_DEPTH)
+    mat4 clipMatrix = mat4(1.0f,  0.0f, 0.0f, 0.0f,
+                           0.0f, -1.0f, 0.0f, 0.0f,
+                           0.0f,  0.0f,-1.0f, 0.0f,
+                           0.0f,  0.0f, 1.0f, 1.0f );  // vulkan clip space: -y & -z
+
+    #define PERSPECTIVE perspectiveRH_ZO // RightHanded space and Z-Buffer [0,1] ==> default "prespective" (both GLM/vgMath) is set to perspectiveRH_NO
+    #define LOOK_AT     lookAt           // default "looAt" (both GLM/vgMath) is set to lookAtRH ==> !!! you can change ALL defaults in vgMath_config or in GLM (if use it) !!!
+    // the defautl values can be changed vgMath_config (vgMath) or in GLM (if use it) !!!
+    // -Z set depthBufferCompareOp = vk::CompareOp::eGreaterOrEqual and depthBufferClearValue = 0.0
+
+    //// Maintain compareOP and clearValue as in +Z
+    vk::CompareOp depthBufferCompareOp = vk::CompareOp::eLessOrEqual;  // of vk::PipelineDepthStencilStateCreateInfo
+    const float depthBufferClearValue = 1.0;                           // "depth" value of vk::ClearDepthStencilValue
+    //
+    //// And invert Z in fragment shader
+    auto vertCode = vk_vert_inv_z;
+    auto fragCode = vk_frag_inv_z;
+
+    // No rotation changes
+    #define APP_FLIP_ROT_X
+    #define APP_FLIP_ROT_Y
+    #define APP_FLIP_ROT_Z
+    #define APP_FLIP_PAN_X
+    #define APP_FLIP_PAN_Y
+    #define APP_FLIP_DOLLY
+    #define APP_REVERSE_AXES
+#endif
+
+    //////////////////////////////////////////////////////////////////////
+    // A possible vulkan "untouched" 3D space ==> with identity clipMatrix (therefore no changes)
+    // lightPosition is always: vec3(2, 2.5, 3) ... but:
+    // The "cube light spot" is DOWN respect MainCube centered in (0,0,0) ==> Y grows down
+    // It's also behind the MainCube ==> Z grows forward
+    // reversing Y axis change also the "apparent" rotation (toward from POV)
+
+//#define APP_VULKAN_NATIVE
+#if defined(APP_VULKAN_NATIVE)
+
+    mat4 clipMatrix = mat4(1.0f);  // vulkan clip space: NO changes ==> identity Matrix
+
+    // +Z set depthBufferCompareOp = vk::CompareOp::eLessOrEqual    and depthBufferClearValue = 1.0
+    vk::CompareOp depthBufferCompareOp = vk::CompareOp::eLessOrEqual;  // of vk::PipelineDepthStencilStateCreateInfo
+    const float depthBufferClearValue  = 1.0;                          // "depth" value of vk::ClearDepthStencilValue
+
+    #define PERSPECTIVE perspectiveLH_ZO // LeftHanded space and Z-Buffer [0,1] ==> default "prespective" is set to perspectiveRH_NO Z-Buffer [-1,1]
+    #define LOOK_AT     lookAtLH         // LeftHanded space ==> default "looAt" is set to lookAtRH ==> !!! you can change defaults in vGizmo3D_config !!!
+    // the defautl values can be changed in vgConfig.h
+
+
+    // And is also necessary override some rotation:
+    // reversing Y axis change also the "apparent" rotation (toward from POV)
+    // and obviously also the all the Y drag: also Dolly (in/out) is influenced from mouse Y (up/douw)
+
+    // ALL these settings can be made in the code or (una tantum) set as default in vGizmo3D_config.h (if use it)
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // All possible settings: These override the vGizmo3D_config.h ones: "get" current setting and "revert" it
+    #define APP_FLIP_ROT_X //vgTrackball.flipRotOnY(!vgTrackball.getFlipRotOnY());
+    #define APP_FLIP_ROT_Y vgTrackball.flipRotOnY(!vgTrackball.getFlipRotOnY());
+    #define APP_FLIP_ROT_Z vgTrackball.flipRotOnZ(!vgTrackball.getFlipRotOnZ());
+
+    #define APP_FLIP_PAN_X //vgTrackball.setFlipPanY(!vgTrackball.getFlipPanY());
+    #define APP_FLIP_PAN_Y vgTrackball.setFlipPanY(!vgTrackball.getFlipPanY());
+    #define APP_FLIP_DOLLY vgTrackball.setFlipDolly(!vgTrackball.getFlipDolly());
+
+    auto vertCode = vk_vertex_instanced;
+    auto fragCode = fragment_code;
+#endif

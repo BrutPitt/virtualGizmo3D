@@ -44,16 +44,16 @@ void frameworkBase::initVGizmo3D(vg::vGizmo3D &vgTrackball)     // Settings to c
     // Initialization is necessary to associate your preferences to vGizmo3D
     // These are also the DEFAULT values, so if you want to maintain these combinations you can omit they
     // and to override only the associations that you want modify
-        vgTrackball.setGizmoRotControl         (vg::evButton1  /* or vg::evLeftButton */, 0 /* vg::evNoModifier */ );
+        vgTrackball.setGizmoRotControl      (vg::evButton1  /* or vg::evLeftButton */, 0 /* vg::evNoModifier */ );
     // Rotations around specific axis: mouse button and key modifier
-        vgTrackball.setGizmoRotXControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evShiftModifier);
-        vgTrackball.setGizmoRotYControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evControlModifier);
-        vgTrackball.setGizmoRotZControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
+        vgTrackball.setGizmoRotXControl     (vg::evButton1  /* or vg::evLeftButton */, vg::evShiftModifier);
+        vgTrackball.setGizmoRotYControl     (vg::evButton1  /* or vg::evLeftButton */, vg::evControlModifier);
+        vgTrackball.setGizmoRotZControl     (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
     // Set vGizmo3D control for secondary rotation
-        vgTrackball.setGizmoSecondaryRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
+        vgTrackball.setGizmoSecondRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
     // Pan and Dolly/Zoom: mouse button and key modifier
-        vgTrackball.setDollyControl            (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
-        vgTrackball.setPanControl              (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
+        vgTrackball.setDollyControl         (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
+        vgTrackball.setPanControl           (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
     // N.B. vg::enums are ONLY mnemonic: select and pass specific vg::enum to framework (that can have also different IDs)
 
     // passing the screen sizes auto-set the mouse sensitivity
@@ -124,7 +124,7 @@ void frameworkSDL::addReqExtensions() {
 
 /// vGizmo3D: Check key modifier currently pressed (GLFW version)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int frameworkSDL::getModifier() {
+int frameworkSDL::getVGizmo3DKeyModifier() {
     SDL_Keymod keyMod = SDL_GetModState();
 #ifdef APP_USES_SDL2
     if(     keyMod & KMOD_CTRL )     return vg::evControlModifier;
@@ -142,7 +142,7 @@ int frameworkSDL::getModifier() {
 
 // vGizmo3D: check changing button state to activate/deactivate drag movements  (pressing both activate/deacivate both functionality)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void frameworkSDL::checkGizmoMouseEvent(vg::vGizmo3D &vgTrackball) {
+void frameworkSDL::checkVGizmo3DMouseEvent(vg::vGizmo3D &vgTrackball) {
     static int leftPress = 0, rightPress = 0, middlePress;
 #ifdef APP_USES_SDL2
     int x, y;
@@ -150,22 +150,22 @@ void frameworkSDL::checkGizmoMouseEvent(vg::vGizmo3D &vgTrackball) {
     float x, y;
 #endif
     int mouseState = SDL_GetMouseState(&x, &y);
-    if(leftPress != (mouseState & SDL_BUTTON_LMASK)) {              // check if leftButton state is changed
-        leftPress =  mouseState & SDL_BUTTON_LMASK ;                // set new (different!) state
-        vgTrackball.mouse(vg::evLeftButton, getModifier(),          // send communication to vGizmo3D...
-                                      leftPress, x, y);             // ... checking if a key modifier currently is pressed
+    if(leftPress != (mouseState & SDL_BUTTON_LMASK)) {                  // check if leftButton state is changed
+        leftPress =  mouseState & SDL_BUTTON_LMASK ;                    // set new (different!) state
+        vgTrackball.mouse(vg::evLeftButton, getVGizmo3DKeyModifier(),   // send communication to vGizmo3D...
+                                      leftPress, x, y);                 // ... checking if a key modifier currently is pressed
     }
-    if(rightPress != (mouseState & SDL_BUTTON_RMASK)) {             // check if rightButton state is changed
-        rightPress =  mouseState & SDL_BUTTON_RMASK;                // set new (different!) state
-        vgTrackball.mouse(vg::evRightButton, getModifier(),         // send communication to vGizmo3D...
-                                       rightPress, x, y);           // ... checking if a key modifier currently is pressed
+    if(rightPress != (mouseState & SDL_BUTTON_RMASK)) {                 // check if rightButton state is changed
+        rightPress =  mouseState & SDL_BUTTON_RMASK;                    // set new (different!) state
+        vgTrackball.mouse(vg::evRightButton, getVGizmo3DKeyModifier(),  // send communication to vGizmo3D...
+                                       rightPress, x, y);               // ... checking if a key modifier currently is pressed
     }
     // Simulating a double press (left+right button) using MIDDLE button,
     // sending two "consecutive" activation/deactivation to rotate cube and light spot together
     if(middlePress != (mouseState & SDL_BUTTON_MMASK)) {             // check if middleButton state is changed
         middlePress =  mouseState & SDL_BUTTON_MMASK;                // set new (different!) middle button state
-        vgTrackball.mouse(vg::evRightButton, getModifier(), middlePress, x, y);  // call Right activation/deactivation with same "middleStatus"
-        vgTrackball.mouse(vg::evLeftButton,  getModifier(), middlePress, x, y);  // call Left  activation/deactivation with same "middleStatus"
+        vgTrackball.mouse(vg::evRightButton, getVGizmo3DKeyModifier(), middlePress, x, y);  // call Right activation/deactivation with same "middleStatus"
+        vgTrackball.mouse(vg::evLeftButton,  getVGizmo3DKeyModifier(), middlePress, x, y);  // call Left  activation/deactivation with same "middleStatus"
     }
 
 // vGizmo3D: if "drag" active update internal rotations (primary and secondary)
@@ -248,7 +248,7 @@ void frameworkClass::getReqExtensions() {
 
 /// vGizmo3D: Check key modifier currently pressed (GLFW version)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int frameworkClass::getModifier()
+int frameworkClass::getVGizmo3DKeyModifier()
 {
     if((glfwGetKey(getWindow(),GLFW_KEY_LEFT_CONTROL)    == GLFW_PRESS) || (glfwGetKey(getWindow(),GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS))
             return vg::evControlModifier;
@@ -263,31 +263,32 @@ int frameworkClass::getModifier()
 
 /// vGizmo3D: check changing button state to activate/deactivate drag movements (pressing together left/right activate/deactivate both)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void frameworkClass::checkGizmoMouseEvent(vg::vGizmo3D &vgTrackball)
+void frameworkClass::checkVGizmo3DMouseEvent(vg::vGizmo3D &vgTrackball)
 {
         static int leftPress = 0, rightPress = 0, middlePress = 0;
         double x, y;
         glfwGetCursorPos(getWindow(), &x, &y);
-        if(glfwGetMouseButton(getWindow(), GLFW_MOUSE_BUTTON_LEFT) != leftPress) {   // check if leftButton state is changed
+        if(glfwGetMouseButton(getWindow(), GLFW_MOUSE_BUTTON_LEFT) != leftPress) {  // check if leftButton state is changed
             leftPress = leftPress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) state
-            vgTrackball.mouse(vg::evLeftButton, getModifier(),                  // send communication to vGizmo3D...
+            vgTrackball.mouse(vg::evLeftButton, getVGizmo3DKeyModifier(),           // send communication to vGizmo3D...
                                           leftPress, x, y);                         // ... checking if a key modifier currently is pressed
         }
         if(glfwGetMouseButton(getWindow(), GLFW_MOUSE_BUTTON_RIGHT) != rightPress) { // same thing for rightButton
             rightPress = rightPress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;
-            vgTrackball.mouse(vg::evRightButton, getModifier(),
+            vgTrackball.mouse(vg::evRightButton, getVGizmo3DKeyModifier(),
                                            rightPress, x, y);
         }
         // Just a trik: simulating a double press (left+right button together) using MIDDLE button,
         // sending two "consecutive" activation/deactivation calls to rotate cube and light spot together
-        if(glfwGetMouseButton(getWindow(), GLFW_MOUSE_BUTTON_MIDDLE) != middlePress) {   // check if middleButton state is changed
-            middlePress = middlePress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) middle button state
-            vgTrackball.mouse(vg::evLeftButton, getModifier(),  middlePress, x, y); // call Left activation/deactivation with same "middleStatus"
-            vgTrackball.mouse(vg::evRightButton, getModifier(), middlePress, x, y); // call Right activation/deactivation with same "middleStatus"
+        if(glfwGetMouseButton(getWindow(), GLFW_MOUSE_BUTTON_MIDDLE) != middlePress) {         // check if middleButton state is changed
+            middlePress = middlePress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;               // set new (different!) middle button state
+            vgTrackball.mouse(vg::evLeftButton, getVGizmo3DKeyModifier(),  middlePress, x, y); // call Left activation/deactivation with same "middleStatus"
+            vgTrackball.mouse(vg::evRightButton, getVGizmo3DKeyModifier(), middlePress, x, y); // call Right activation/deactivation with same "middleStatus"
         }
 
     // vGizmo3D: if "drag" active update internal rotations (primary and secondary)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         vgTrackball.motion(x,y);
+        //vgTrackball.motion(x,y,vgTrackball.getDollyPosition().z);
 }
 #endif

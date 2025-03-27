@@ -246,16 +246,16 @@ void initVGizmo3D()     // Settings to control vGizmo3D
     // Initialization is necessary to associate your preferences to vGizmo3D
     // These are also the DEFAULT values, so if you want to maintain these combinations you can omit they
     // and to override only the associations that you want modify
-        track.setGizmoRotControl         (vg::evButton1  /* or vg::evLeftButton */, 0 /* vg::evNoModifier */ );
+        track.setGizmoRotControl      (vg::evButton1  /* or vg::evLeftButton */, 0 /* vg::evNoModifier */ );
     // Rotations around specific axis: mouse button and key modifier
-        track.setGizmoRotXControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evShiftModifier);
-        track.setGizmoRotYControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evControlModifier);
-        track.setGizmoRotZControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
+        track.setGizmoRotXControl     (vg::evButton1  /* or vg::evLeftButton */, vg::evShiftModifier);
+        track.setGizmoRotYControl     (vg::evButton1  /* or vg::evLeftButton */, vg::evControlModifier);
+        track.setGizmoRotZControl     (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
     // Set vGizmo3D control for secondary rotation
-        track.setGizmoSecondaryRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
+        track.setGizmoSecondRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
     // Pan and Dolly/Zoom: mouse button and key modifier
-        track.setDollyControl            (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
-        track.setPanControl              (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
+        track.setDollyControl         (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
+        track.setPanControl           (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
     // N.B. vg::enums are ONLY mnemonic: select and pass specific vg::enum to framework (that can have also different IDs)
 
     // passing the screen sizes calibrate drag rotation and auto-set the mouse sensitivity
@@ -318,7 +318,7 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
         track.idle();   // set continuous rotation on Idle: the smooth rotation depends on speed of last mouse movements
                         // It can be adjusted from setIdleRotSpeed(1.0) > more speed, < less
                         // It can be stopped by click on screen (without mouse movement)
-
+        track.idleSecond();
 
     // transferring the rotation to cube model matrix...
         mat4 modelMatrix = cubeObj * mat4_cast(track.getRotation());

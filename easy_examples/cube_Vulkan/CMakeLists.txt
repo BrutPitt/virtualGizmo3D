@@ -11,7 +11,7 @@
 #  This software is distributed under the terms of the BSD 2-Clause license
 #------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.16)
-project(vkCube)
+project(vGizmo3D_vkCube)
 
 # To use SDL2 | SDL3 as backend framework (instead of GLFW) type:
 #       cmake -DUSE_SDL2=ON
@@ -20,6 +20,13 @@ project(vkCube)
 # obviously is necessary to have SDL2/SDL3 (+devel package) installed
 option(USE_SDL2 "use SDL2 instead of GLFW (default) framework" OFF)
 option(USE_SDL3 "use SDL3 instead of GLFW (default) framework" OFF)
+
+# use negative Z in clipMatrix ==> view at the end of vkCube.h
+# also settable via/in code    ==> view at the end of vkCube.h
+option(APP_HAS_NEG_Z "use negative Z in clipMatrix ==> view at the end of vkCube.h" OFF)
+if(APP_HAS_NEG_Z)
+    set(M_GLOBAL_FLAGS "${M_GLOBAL_FLAGS} -DAPP_HAS_NEG_Z")
+endif()
 
 # Debug Validation Layer is enabled in ONLY Debug mode
 #       cmake -DFORCE_VALIDATION_LAYER=ON
@@ -55,8 +62,9 @@ set(SRC "${CMAKE_SOURCE_DIR}")
         ${SRC}/framework.cpp
         ${SRC}/dbgValidationLayer.h
         ${VGIZMO_DIR}/vGizmo3D.h
+        ${VGIZMO_DIR}/vGizmo3D_config.h
         ${VGIZMO_DIR}/vgMath.h
-        ${VGIZMO_DIR}/vgConfig.h
+        ${VGIZMO_DIR}/vgMath_config.h
         ${COMMONS_DIR}/shadersAndModel.h
     )
 
@@ -96,13 +104,15 @@ message(STATUS "Shaderc found in: ${SHADERC_LIB}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${M_GLOBAL_FLAGS}")
 #target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-declarations -fpermissive)
-if(EXISTS $ENV{RAMDISK}) #my RAMDISK env
-    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY $ENV{RAMDISK}/${PROJECT_NAME})
-else()
-    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
-endif()
+#if(EXISTS $ENV{RAMDISK}) #my RAMDISK env
+#    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY $ENV{RAMDISK}/${PROJECT_NAME})
+#else()
+#    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+#endif()
 
 if(VULKAN_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC $ENV{VULKAN_SDK}/include)
-    target_link_libraries (${PROJECT_NAME} ${Vulkan_LIBRARIES} -lpthread -lX11 ${SHADERC_LIB})
+    target_link_libraries (${PROJECT_NAME} ${Vulkan_LIBRARIES} ${CMAKE_DL_LIBS}  ${SHADERC_LIB})
 endif (VULKAN_FOUND)
+
+#file(WRITE ${CMAKE_SOURCE_DIR}/.idea/.name ${PROJECT_NAME}) # used to rename a Project in clion (run once)

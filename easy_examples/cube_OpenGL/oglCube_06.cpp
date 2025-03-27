@@ -212,7 +212,7 @@ void initVGizmo3D()     // Settings to control vGizmo3D
         track.setGizmoRotYControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evControlModifier);
         track.setGizmoRotZControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
     // Set vGizmo3D control for secondary rotation
-        track.setGizmoSecondaryRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
+        track.setGizmoSecondRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
     // Pan and Dolly/Zoom: mouse button and key modifier
         track.setDollyControl            (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
         track.setPanControl              (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
@@ -300,6 +300,7 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
         track.idle();   // set continuous rotation on Idle: the slow rotation depends on speed of last mouse movement
                         // It can be adjusted from setIdleRotSpeed(1.0) > more speed, < less
                         // It can be stopped by click on screen (without mouse movement)
+        track.idleSecond();
 
 
     // transferring the rotation to cube model matrix...

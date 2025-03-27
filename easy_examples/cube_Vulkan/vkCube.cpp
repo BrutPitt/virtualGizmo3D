@@ -119,9 +119,6 @@ void vkAppBase::buildImagesView()
 /////////////////////////////////////////////
 void vkAppBase::compileShaders()
 {
-    auto vertCode = vk_vertex_instanced;
-    auto fragCode = fragment_code;
-
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
 #ifdef NDEBUG
@@ -191,7 +188,7 @@ void vkAppBase::buildGraphPipeline()
 
     bool depthBuffered = true;
     vk::StencilOpState stencilOpState( vk::StencilOp::eKeep, vk::StencilOp::eKeep, vk::StencilOp::eKeep, vk::CompareOp::eAlways );
-    vk::PipelineDepthStencilStateCreateInfo depthStencil({}, depthBuffered, depthBuffered, compareOp, false, false, stencilOpState, stencilOpState );
+    vk::PipelineDepthStencilStateCreateInfo depthStencil({}, depthBuffered, depthBuffered, depthBufferCompareOp, false, false, stencilOpState, stencilOpState );
 
     vk::PipelineMultisampleStateCreateInfo multisampling { {}, vk::SampleCountFlagBits::e1 };
 
@@ -274,7 +271,7 @@ void vkAppBase::setCommandBuffer(uint32_t currentFrame)
 {
     std::array<vk::ClearValue, 2> clearValues;
     clearValues[0].color        = vk::ClearColorValue( 0.07f, 0.07f, 0.07f, 0.07f );
-    clearValues[1].depthStencil = vk::ClearDepthStencilValue( 1.0f, 0 );
+    clearValues[1].depthStencil = vk::ClearDepthStencilValue( depthBufferClearValue, 0 );
     const vk::Rect2D rect(vk::Offset2D( 0, 0 ), swapChainExtent);
     const vk::Rect2D scissor({ 0, 0 }, swapChainExtent);
     const vk::Viewport viewport(0.0f, 0.0f, swapChainExtent.width, swapChainExtent.height, 0.0f, 1.0f);
@@ -314,14 +311,16 @@ void vkApp::setPerspective()
 {
     float aspectRatio = float(height) / float(width);       // Set "camera" position and perspective
     float fov = radians( 45.0f ) * aspectRatio;
-    projMatrix = perspective( fov, 1/aspectRatio, 0.1f, 100.0f );
+    // PERSPECTIVE: depends from clipMatrix (+Z or -Z) ==> view in the end of vkCube.h
+    projMatrix = PERSPECTIVE( fov, 1/aspectRatio, 0.1f, 100.0f );
 
 }
 
 void vkApp::setScene()
 {
-    viewMatrix = lookAt( vec3( 10.0f, 10.0f, 10.0f ),   // From / EyePos
-                         vec3(  0.0f,  0.0f,  0.0f ),   // To   /
+    // LOOK_AT: depends from clipMatrix (+Z or -Z) ==> view in the end of vkCube.h
+    viewMatrix = LOOK_AT(vec3( 12.0f,  6.0f,  4.0f ),   // From / EyePos / PoV
+                         vec3(  0.0f,  0.0f,  0.0f ),   // To   /  Tgt
                          vec3(  3.0f,  1.0f,   .0f));   // Up
 
     // Now scale cube to better view light position
@@ -398,13 +397,14 @@ void vkApp::resizeWnd()
 void vkApp::run()
 {
     while(framework.pollEvents()) {
-        framework.checkGizmoMouseEvent(vgTrackball);
+        framework.checkVGizmo3DMouseEvent(vgTrackball);
 
 // vGizmo3D: call it every rendering loop if you want a continue rotation until you do not click on screen
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         vgTrackball.idle(); // set continuous rotation on Idle: the slow rotation depends on speed of last mouse movement
                             // It can be adjusted from setIdleRotSpeed(1.0) > more speed, < less
                             // It can be stopped by click on screen (without mouse movement)
+        vgTrackball.idleSecond();
 
     // transferring the rotation to cube model matrix...
         mat4 modelMatrix = cubeObj * mat4_cast(vgTrackball.getRotation());
@@ -437,6 +437,19 @@ void vkApp::onInit()        // called from constructor @ startup
 // Set Scene, vGizmo3D init and set starting rotations (primary & secondary)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     setScene();
+
+    // If you need to flip "mouse movements"
+    // you can set they in the code or set as default values in vGizmo3D_config.h
+// If you need to flip "mouse movements"
+    // you can set they in the code or set as default values in vGizmo3D_config.h
+    APP_FLIP_ROT_X
+    APP_FLIP_ROT_Y
+    APP_FLIP_ROT_Z
+    APP_FLIP_PAN_X
+    APP_FLIP_PAN_Y
+    APP_FLIP_ROT_X
+    APP_FLIP_DOLLY
+
 }
 
 void vkApp::onExit()        // called from destructor @ exit

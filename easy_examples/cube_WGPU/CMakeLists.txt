@@ -26,7 +26,7 @@
 #  4. python -m http.server ... then open WGPU browser with url: http://localhost:8000/wgpu_mandelbrot.html
 
 cmake_minimum_required(VERSION 3.16) # DAWN required
-project(cube_wgpu_example)
+project(vGizmo3D_wgpuCube)
 
 set(APP_NAME vGizmo3D_wgpuCube)
 
@@ -78,7 +78,7 @@ else()
   # You can override this using: cmake -DDAWN_USE_WAYLAND=X (X = ON | OFF)
   if(UNIX)
     if ($ENV{XDG_SESSION_TYPE} MATCHES wayland)
-      option(DAWN_USE_WAYLAND "Enable support for Wayland surface" ON)
+      option(DAWN_USE_WAYLAND "Enable support for Wayland surface" OFF)
     endif()
   endif()
 
@@ -102,7 +102,7 @@ include_directories(${VGIZMO_DIR})
 message(${VGIZMO_PARENT_DIR})
 
 set(SOURCE_FILES
-        ${SRC}/main_js_inline.cpp
+        ${SRC}/main.cpp
         ${VGIZMO_DIR}/vGizmo3D.h
         ${VGIZMO_DIR}/vgMath.h
         ${VGIZMO_DIR}/vGizmo3D_config.h
@@ -132,9 +132,4 @@ if(EMSCRIPTEN)
   )
 endif()
 
-#These examples use Google DAWN (as WGPU SDK), currently a step forward in native development
-#Indeed EMSCRIPTEN still uses some old functions (already changed in DAWN/WGPU native) and Google DAWN maintain a private fork of the Emscripten WebGPU bindings (**emdawnwebgpu**) to speedup the WebGPU evolution ([emdawnwebgpu is available in DAWN repo](https://dawn.googlesource.com/dawn/+/refs/heads/main/src/emdawnwebgpu/))
-#These examples (for now) use the "original" EMSCRIPTEN, for this motive there is so many differences between native and web code
-#
-#
-#
+file(WRITE ${CMAKE_SOURCE_DIR}/.idea/.name ${PROJECT_NAME}) # used to rename a Project in clion (run once)

@@ -12,19 +12,19 @@
 //------------------------------------------------------------------------------
 #include <cstdlib>
 #include <iostream>
+#include <cfloat>
 #include <glad/glad.h>
-#include <SDL2/SDL.h>
+#include <GLFW/glfw3.h>
 
 #include "oglDebug.h"
 #include "../commons/shadersAndModel.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // vGizmo3D:
-#include <vGizmo3D.h> // now also vGizmo3D.h from v3.1
+#include <vGizmo3D.h>
 
 int width = 1280, height = 800;
-SDL_Window *sdlWindow = nullptr;
-SDL_GLContext gl_context;
+GLFWwindow *glfwWindow;
 
 const int nElemVtx = 4;
 const size_t nVertex = sizeof(coloredCubeData)/(sizeof(float)*2*nElemVtx);
@@ -36,7 +36,7 @@ enum loc { vtxIdx = 0, colIdx, mvpIdx, lightIdx};     // shader locations
 mat4 mvpMatrix, viewMatrix, projMatrix;
 mat4 lightObj, lightMatrix, cubeObj;
 
-/// vGizmo3D : declare global/static/member/..
+/// imGuIZMO / vGizmo3D : declare global/static/member/..
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 vg::vGizmo3D track;     // using vGizmo3D global/static/member instead of specifics variables...
                         // have rotations & Pan/Dolly position variables inside to use with imGuIZMO.quat
@@ -56,13 +56,6 @@ void draw()
     glDrawArraysInstanced(GL_TRIANGLES, 0, nVertex, 2);   // now using instanced draw to "simulate" light
 
     glUseProgram(0);
-}
-
-void setPerspective()
-{
-    float aspectRatio = float(height) / float(width);       // Set "camera" position and perspective
-    float fov = radians( 45.0f ) * aspectRatio;
-    projMatrix = perspective( fov, 1/aspectRatio, 0.1f, 100.0f );
 }
 
 void setScene()
@@ -102,18 +95,21 @@ void setScene()
 
     lightObj = inverse(static_cast<mat4>(track.getSecondRot())) * lightObj ;
 
-    setPerspective();
 }
 
-void windowResize(int w, int h)
+void glfwWindowSizeCallback(GLFWwindow* window, int w, int h)
 {
     width = w; height = h;
-    setPerspective();
     glViewport(0, 0, width, height);
 
     track.viewportSize(w, h);   // call it on resize window to re-adjust mouse sensitivity
 
     draw();
+}
+
+void glfwScrollCallback(GLFWwindow* window, double x, double y)
+{
+    track.wheel(x, y);
 }
 
 void initGL()
@@ -168,38 +164,29 @@ void initGL()
 
 void initFramework()
 {
+    glfwInit();
 
-    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+
+    glfwWindow = glfwCreateWindow(width, height, "glCube", NULL, NULL);
+    if (!glfwWindow)
     {
-        printf("Error: %s\n", SDL_GetError());
-        return ;
+        glfwTerminate();
+        exit(EXIT_FAILURE);
     }
 
-    // GL 3.0 + GLSL 130
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
-    ///        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    glfwMakeContextCurrent(glfwWindow);
+    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);  //get OpenGL extensions
 
-#ifdef SDL_HINT_IME_SHOW_UI
-    SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
-#endif
+    glfwSetWindowSizeCallback(glfwWindow, glfwWindowSizeCallback);
+    glfwSetScrollCallback(glfwWindow, glfwScrollCallback);
 
-    // Create window with graphics context
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_DisplayMode current;
-    SDL_GetCurrentDisplayMode(0, &current);
-
-    sdlWindow = SDL_CreateWindow("glCube", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE| SDL_WINDOW_ALLOW_HIGHDPI);
-    gl_context = SDL_GL_CreateContext(sdlWindow);
-    SDL_GL_MakeCurrent(sdlWindow, gl_context);
-    SDL_GL_SetSwapInterval(1); // Enable vsync
-
-    gladLoadGL();
-
+    glfwSwapInterval(1); // 0 vSync off - 1 vSync on
 }
 
 /// vGizmo3D initialize: <br>
@@ -210,22 +197,23 @@ void initVGizmo3D()     // Settings to control vGizmo3D
     // Initialization is necessary to associate your preferences to vGizmo3D
     // These are also the DEFAULT values, so if you want to maintain these combinations you can omit they
     // and to override only the associations that you want modify
-        track.setGizmoRotControl      (vg::evButton1  /* or vg::evLeftButton */, 0 /* vg::evNoModifier */ );
+        track.setGizmoRotControl         (vg::evButton1  /* or vg::evLeftButton */, 0 /* vg::evNoModifier */ );
     // Rotations around specific axis: mouse button and key modifier
-        track.setGizmoRotXControl     (vg::evButton1  /* or vg::evLeftButton */, vg::evShiftModifier);
-        track.setGizmoRotYControl     (vg::evButton1  /* or vg::evLeftButton */, vg::evControlModifier);
-        track.setGizmoRotZControl     (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
+        track.setGizmoRotXControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evShiftModifier);
+        track.setGizmoRotYControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evControlModifier);
+        track.setGizmoRotZControl        (vg::evButton1  /* or vg::evLeftButton */, vg::evAltModifier | vg::evSuperModifier);
     // Set vGizmo3D control for secondary rotation
         track.setGizmoSecondRotControl(vg::evButton2  /* or vg::evRightButton */, 0 /* vg::evNoModifier */ );
     // Pan and Dolly/Zoom: mouse button and key modifier
-        track.setDollyControl         (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
-        track.setPanControl           (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
+        track.setDollyControl            (vg::evButton2 /* or vg::evRightButton */, vg::evControlModifier);
+        track.setPanControl              (vg::evButton2 /* or vg::evRightButton */, vg::evShiftModifier);
     // N.B. vg::enums are ONLY mnemonic: select and pass specific vg::enum to framework (that can have also different IDs)
 
     // passing the screen sizes calibrate drag rotation and auto-set the mouse sensitivity
         track.viewportSize(width, height);      // is necessary also to call when resize window/surface: re-calibrate drag rotation & auto-set mouse sensitivity
     // track.setGizmoFeeling(1.0);              // but if you need to more feeling with the mouse use: 1.0 default,  > 1.0 more sensible, < 1.0 less sensible
 
+    // setIdleRotSpeed(1.0)                     // If used Idle() feature (continue rotation on Idle) it set that speed: more speed > 1.0 ,  less < 1.0
 
     // other settings if you need it
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,19 +223,21 @@ void initVGizmo3D()     // Settings to control vGizmo3D
     // track.setPanyPosition(/* your pos */);   // vec3 ==> only X and Y are acquired
     // track.setPosition(/* your pos */);       // input vec3 is equivalent to call: track.setDollyPosition(/* your pos */); and track.setPanyPosition(/* your pos */);
     // track.setRotationCenter(/* vec3 */);     // new rotation center
-    // track.setIdleRotSpeed(1.0)               // If used Idle() feature (continue rotation on Idle) it set that speed: more speed > 1.0 ,  less < 1.0
     //
     // Watch vGizmo.h for more functionalities
 }
 
 /// vGizmo3D: Check key modifier currently pressed (GLFW version)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int getModifier(SDL_Window* window = nullptr) {
-    SDL_Keymod keyMod = SDL_GetModState();
-    if(keyMod & KMOD_CTRL)          return vg::evControlModifier;
-    else if(keyMod & KMOD_SHIFT)    return vg::evShiftModifier;
-    else if(keyMod & KMOD_ALT)      return vg::evAltModifier;
-    else if(keyMod & KMOD_GUI)      return vg::evSuperModifier;
+int getModifier(GLFWwindow* window) {
+    if((glfwGetKey(window,GLFW_KEY_LEFT_CONTROL)    == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS))
+            return vg::evControlModifier;
+    else if((glfwGetKey(window,GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_SHIFT)   == GLFW_PRESS))
+            return vg::evShiftModifier;
+    else if((glfwGetKey(window,GLFW_KEY_LEFT_ALT)   == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_ALT)     == GLFW_PRESS))
+            return vg::evAltModifier;
+    else if((glfwGetKey(window,GLFW_KEY_LEFT_SUPER) == GLFW_PRESS) || (glfwGetKey(window,GLFW_KEY_RIGHT_SUPER)   == GLFW_PRESS))
+            return vg::evSuperModifier;
     else return vg::evNoModifier;
 }
 
@@ -264,75 +254,70 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
     vec4 bgColor = vec4(0.0f);
     GLfloat f=1.0f;
 
-    SDL_Event event;
-    bool done = false;
     // main render/draw loop
-    while(!done) {
-        while(SDL_PollEvent(&event)) {
-            if(event.type == SDL_QUIT || event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(sdlWindow))
-                done = true;
-            if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                int w, h;
-                SDL_GetWindowSize(sdlWindow, &w, &h);
-                windowResize(w, h);
-            }
-        }
-        if (SDL_GetWindowFlags(sdlWindow) & SDL_WINDOW_MINIMIZED) {
-            SDL_Delay(10);
-            continue;
-        }
+    while (!glfwWindowShouldClose(glfwWindow)) {
+        glfwPollEvents();
         glClearBufferfv(GL_DEPTH, 0, &f);
         glClearBufferfv(GL_COLOR, 0, value_ptr(bgColor));
 
-
-    // vGizmo3D: check changing button state to activate/deactivate drag movements  (pressing both activate/deacivate both functionality)
+    // vGizmo3D: check changing button state to activate/deactivate drag movements (pressing together left/right activate/deactivate both)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        static int leftPress = 0, rightPress = 0, middlePress;
-        int x, y;
-        int mouseState = SDL_GetMouseState(&x, &y);
-        if(leftPress != (mouseState & SDL_BUTTON_LMASK)) {              // check if leftButton state is changed
-            leftPress = mouseState & SDL_BUTTON_LMASK ;                 // set new (different!) state
-            track.mouse(vg::evLeftButton, getModifier(sdlWindow),       // send communication to vGizmo3D...
-                                          leftPress, x, y);             // ... checking if a key modifier currently is pressed
+        static int leftPress = 0, rightPress = 0, middlePress = 0;
+        double x, y;
+        glfwGetCursorPos(glfwWindow, &x, &y);
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_LEFT) != leftPress) {   // check if leftButton state is changed
+            leftPress = leftPress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) state
+            track.mouse(vg::evLeftButton, getModifier(glfwWindow),                  // send communication to vGizmo3D...
+                                          leftPress, x, y);                         // ... checking if a key modifier currently is pressed
         }
-        if(rightPress != (mouseState & SDL_BUTTON_RMASK)) {             // check if rightButton state is changed
-            rightPress = mouseState & SDL_BUTTON_RMASK;                 // set new (different!) state
-            track.mouse(vg::evRightButton, getModifier(sdlWindow),      // send communication to vGizmo3D...
-                                           rightPress, x, y);           // ... checking if a key modifier currently is pressed
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_RIGHT) != rightPress) { // same thing for rightButton
+            rightPress = rightPress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;
+            track.mouse(vg::evRightButton, getModifier(glfwWindow),
+                                           rightPress, x, y);
         }
-        // Simulating a double press (left+right button) using MIDDLE button,
-        // sending two "consecutive" activation/deactivation to rotate cube and light spot together
-        if(middlePress != (mouseState & SDL_BUTTON_MMASK)) {             // check if middleButton state is changed
-            middlePress = mouseState & SDL_BUTTON_MMASK;                 // set new (different!) middle button state
-            track.mouse(vg::evRightButton, getModifier(sdlWindow), middlePress, x, y);  // call Right activation/deactivation with same "middleStatus"
-            track.mouse(vg::evLeftButton,  getModifier(sdlWindow), middlePress, x, y);  // call Left  activation/deactivation with same "middleStatus"
-        } 
-
+        // Just a trik: simulating a double press (left+right button together) using MIDDLE button,
+        // sending two "consecutive" activation/deactivation calls to rotate cube and light spot together
+        if(glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE) != middlePress) {   // check if middleButton state is changed
+            middlePress = middlePress == GLFW_PRESS ? GLFW_RELEASE : GLFW_PRESS;        // set new (different!) middle button state
+            track.mouse(vg::evLeftButton, getModifier(glfwWindow),  middlePress, x, y); // call Left activation/deactivation with same "middleStatus"
+            track.mouse(vg::evRightButton, getModifier(glfwWindow), middlePress, x, y); // call Right activation/deactivation with same "middleStatus"
+        }
     // vGizmo3D: if "drag" active update internal rotations (primary and secondary)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         track.motion(x,y);
 
     // vGizmo3D: call it every rendering loop if you want a continue rotation until you do not click on screen
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        track.idle();   // set continuous rotation on Idle: the slow rotation depends on speed of last mouse movements
+        track.idle();   // set continuous rotation on Idle: the slow rotation depends on speed of last mouse movement
                         // It can be adjusted from setIdleRotSpeed(1.0) > more speed, < less
                         // It can be stopped by click on screen (without mouse movement)
         track.idleSecond();
 
+
     // transferring the rotation to cube model matrix...
         mat4 modelMatrix = cubeObj * mat4_cast(track.getRotation());
 
-    // Build a "translation" matrix
-        mat4 translationMatrix = translate(mat4(1), track.getPosition());      // add translations (pan/dolly) to an identity matrix
+    // Ortho parameters
+        float orthoDim = 5.0f;
+        float near = 0.1;
+        float far = 100.f;
+        float aspectRatio = float(height) / float(width);       // Set "camera" position and perspective
+
+        // In ortho pan and dolly is very simply to use
+        vec2  pan   { track.getPosition().x, track.getPosition().y };
+        float dolly { track.getPosition().z };
+
+        float newOrthoDim = orthoDim - dolly;
+        projMatrix = ortho(-newOrthoDim - pan.x, newOrthoDim - pan.x, -newOrthoDim*aspectRatio - pan.y, newOrthoDim*aspectRatio - pan.y, near, far);
 
     // build MVPs matrices to pass to shader
-        mvpMatrix   = projMatrix * viewMatrix * compensateView * translationMatrix * modelMatrix;
-        lightMatrix = projMatrix * viewMatrix * compensateView * translationMatrix * (static_cast<mat4>(track.getSecondRot())) * lightObj;
+        mvpMatrix   = projMatrix * viewMatrix * compensateView * modelMatrix;
+        lightMatrix = projMatrix * viewMatrix * compensateView * (static_cast<mat4>(track.getSecondRot())) * lightObj;
 
     // draw the cube, passing matrices to the vtx shader
         draw();
 
-        SDL_GL_SwapWindow(sdlWindow);
+        glfwSwapBuffers(glfwWindow);
     }
 
     // Cleanup OpenGL
@@ -341,8 +326,8 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
     glDeleteProgram(program);
 
     // Cleanup Framework
-    SDL_DestroyWindow(sdlWindow);
-    SDL_Quit();
+    glfwDestroyWindow(glfwWindow);
+    glfwTerminate();
 
     return EXIT_SUCCESS;
 }

@@ -7,7 +7,7 @@ It was written in C++ and can be compiled in native mode (for a standalone deskt
 
 - [vGizmo3D v3.99 **WGPU / WebGPU** - easy_cube example](https://brutpitt.github.io/myRepos/vGizmo3D/wgpuCube/vGizmo3D_wgpuCube.html)
 
-**is necessary to use a browser with **WebGPU** capabilities: e.g. Chrome-Canary, FireFox Nightly, Safari Technology Preview ...*
+**It's necessary to use a browser with **WebGPU** capabilities: e.g. Chrome-Canary, FireFox Nightly, Safari Technology Preview ...*
 
 This example use Google DAWN (as WGPU SDK) to build native executable (CMakeLists.txt). 
 
@@ -32,11 +32,11 @@ It's necessary to have installed **GLFW** (development package) and python3 (Goo
 
 then
 
-- `emrun build/wgpu_mandelbrot.html`
+- `emrun build/name_of_example.html`
 
 or
 
-- `python -m http.server` (in `build` folder)... then open WGPU browser with url: http://localhost:8000/wgpu_mandelbrot.html
+- `python -m http.server` (in `build` folder)... then open WGPU browser with url: `http://localhost:8000/name_of_example.html`
 
 
 

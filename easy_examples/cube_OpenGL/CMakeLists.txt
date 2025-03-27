@@ -12,6 +12,9 @@
 #------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.27)
 
+project(vGizmo3D_glCube)
+
+
 set(CMAKE_CXX_STANDARD 17)
 
 set(SRC          ${CMAKE_SOURCE_DIR})
@@ -32,7 +35,8 @@ set(SOURCE_FILES
         ${SRC}/oglDebug.h
         ${VGIZMO_DIR}/vGizmo3D.h
         ${VGIZMO_DIR}/vgMath.h
-        ${VGIZMO_DIR}/vgConfig.h
+        ${VGIZMO_DIR}/vGizmo3D_config.h
+        ${VGIZMO_DIR}/vgMath_config.h
         ${COMMONS_DIR}/shadersAndModel.h)
 
 set(SOURCE_FILES_GLAD
@@ -43,9 +47,9 @@ find_package(glm CONFIG)
 
 option(IMGUIZMO_USES_GLM "Use GLM instead of internal vgMath" OFF)
 
-if(glm_FOUND OR IMGUIZMO_USES_GLM)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVGIZMO_USES_GLM")
-endif()
+#if(glm_FOUND OR IMGUIZMO_USES_GLM)
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVGIZMO_USES_GLM")
+#endif()
 
 find_package(OpenGL)
 
@@ -79,3 +83,5 @@ foreach( oglCubeSourceFile ${APP_SOURCES} )
     target_link_libraries(${oglCubeName} ${CMAKE_DL_LIBS} ${OPENGL_LIBRARY})
 endforeach( oglCubeSourceFile ${APP_SOURCES} )
 
+
+#file(WRITE ${CMAKE_SOURCE_DIR}/.idea/.name ${PROJECT_NAME}) # used to rename a Project in clion (run once)

@@ -11,7 +11,7 @@
 #  This software is distributed under the terms of the BSD 2-Clause license
 #------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.16)
-project(vkLightCube)
+project(vGizmo3D_vkLightCube)
 
 # To use SDL2 | SDL3 as backend framework (instead of GLFW) type:
 #       cmake -DUSE_SDL2=ON
@@ -65,9 +65,8 @@ include_directories(${ASSETS_DIR}) # CLion trik: to "include" (show) shaders (ou
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #   SPIR-V shaders
 
-set(vkSHADERS_RELATIVE_DIR ../../Shaders/lightCube)
-set(vkSHADERS_DIR ${CMAKE_SOURCE_DIR}/${vkSHADERS_RELATIVE_DIR})
-add_compile_definitions("-DAPP_SHADERS_DIR=${vkSHADERS_RELATIVE_DIR}")  # Shaders RELATIVE_DIR is acquired from CMake and passed to code:
+set(vkSHADERS_DIR ${CMAKE_SOURCE_DIR}/../../Shaders/lightCube)
+add_compile_definitions("-DAPP_SHADERS_DIR=${vkSHADERS_DIR}")  # Shaders_DIR is acquired from CMake and passed to code:
 include_directories(${vkSHADERS_DIR}) # CLion trik: to "include" (show) shaders (outside project folder) into Project tool window: not necessary otherwise
 
 set(COMPILED_SHADERS_EXT ".spirv")
@@ -143,10 +142,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC .)
 target_link_libraries(${PROJECT_NAME} ${MORE_LIBS} ${TARGET_LIBS})
 
 find_package(Vulkan REQUIRED)
-message(STATUS "Vulkan found in: ${SHADERC_LIB}")
+message(STATUS "Vulkan found in: ${Vulkan_LIBRARIES}")
 
 # it's necessary only to compile shaders from code: e.g. in easy_examples using compileShaders()... not more here: build external SPIR-V
 find_library(SHADERC_LIB shaderc_combined $ENV{VULKAN_SDK}/lib)
+message("Searck shaderc:  $ENV{VULKAN_SDK}/lib")
 message(STATUS "Shaderc found in: ${SHADERC_LIB}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${M_GLOBAL_FLAGS}")
@@ -155,3 +155,5 @@ if(VULKAN_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC $ENV{VULKAN_SDK}/include)
     target_link_libraries (${PROJECT_NAME} ${Vulkan_LIBRARIES} ${CMAKE_DL_LIBS}  ${SHADERC_LIB})
 endif (VULKAN_FOUND)
+
+#file(WRITE ${CMAKE_SOURCE_DIR}/.idea/.name ${PROJECT_NAME}) # used to rename a Project in clion (run once)

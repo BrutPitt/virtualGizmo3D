@@ -301,9 +301,9 @@ int main(int /* argc */, char ** /* argv */)    // necessary for SDLmain in Wind
         float orthoDim = 5.0f;
         float near = 0.1;
         float far = 100.f;
-        float aspectRatio = float(height) / float(width);       // Set "camera" position and perspective
+        float aspectRatio = float(height) / float(width);
 
-        // In ortho pan and dolly is very simply to use
+    // In ortho-projection using pan and dolly is very simply
         vec2  pan   { track.getPosition().x, track.getPosition().y };
         float dolly { track.getPosition().z };
 
